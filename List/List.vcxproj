@@ -115,6 +115,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CyclicDoubleLinkedList.h" />
+    <ClInclude Include="CyclicList.h" />
+    <ClInclude Include="DoubleLinkedList.h" />
+    <ClInclude Include="List.h" />
+    <ClInclude Include="ListIterator.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
