@@ -94,7 +94,7 @@ namespace MyContainer {
 	}
 
 	template<class T>
-	void MyContainer::CyclicList<T>::push_back(T elem)
+	void MyContainer::CyclicList<T>::push_back(T &elem)
 	{
 		if (this->_size == 0) {
 			init(elem);
@@ -108,7 +108,7 @@ namespace MyContainer {
 	}
 
 	template<class T>
-	void MyContainer::CyclicList<T>::push_front(T elem)
+	void MyContainer::CyclicList<T>::push_front(T &elem)
 	{
 		if (this->_size == 0) {
 			init(elem);

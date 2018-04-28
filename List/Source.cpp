@@ -1,12 +1,13 @@
 #include "DoubleLinkedList.h"
 #include "CyclicList.h"
+#include "CyclicDoubleLinkedList.h"
 
 using namespace std;
 using namespace MyContainer;
 
 int main() {
 	int a = 9;
-	CyclicList<int> lst(a);
+	CyclicDoubleLinkedList<int> lst(a);
 	for (int i = 0; i < 10; ++i) {
 		lst.push_front(i);
 		lst.show();

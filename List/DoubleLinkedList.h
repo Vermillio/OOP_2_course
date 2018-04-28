@@ -7,6 +7,7 @@ namespace MyContainer {
 	template<class T>
 	class DoubleLinkedNode : public NodeBase<T, DoubleLinkedNode<T>> {
 	public:
+		DoubleLinkedNode<T> *_prev;
 		DoubleLinkedNode(T &elem, DoubleLinkedNode<T>* prev, DoubleLinkedNode<T>* next) : NodeBase<T, DoubleLinkedNode<T>>(elem, next), _prev(prev) {
 			if (prev)
 				prev->setNext(this);
@@ -37,7 +38,7 @@ namespace MyContainer {
 		virtual void pop_front();
 		virtual void pop_back();
 		virtual void clear();
-		virtual T& back();
+		T& back();
 	};
 
 	template<class T>
