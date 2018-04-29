@@ -119,6 +119,7 @@
     <ClInclude Include="CyclicList.h" />
     <ClInclude Include="DoubleLinkedList.h" />
     <ClInclude Include="List.h" />
+    <ClInclude Include="ListBase.h" />
     <ClInclude Include="ListIterator.h" />
   </ItemGroup>
   <ItemGroup>

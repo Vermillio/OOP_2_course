@@ -1,48 +1,16 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include "ListBase.h"
 #include <iostream>
 using namespace std;
 
 namespace MyContainer {
 
-	template < class T, class Node >
-	class NodeBase {
-	public:
-		T _elem;
-		Node * _next;
-		NodeBase(T &elem, Node * next) : _elem(elem), _next(next) {}
-		void setNext(Node * next) {
-			_next = next;
-		}
-
-	};
-
 	template<class T>
 	class ListNode : public NodeBase<T, ListNode<T>> {
 	public:
 		ListNode(T &elem, ListNode<T> * next) : NodeBase<T, ListNode<T>>(elem, next) {}
-	};
-
-	template<class T, class Node>
-	class ListBase {
-		static_assert(is_base_of<NodeBase<T, Node>, Node>::value, "Node must be derived from NodeBase.");
-	protected:
-		using Nodep = Node * ;
-		size_t _size;
-		Nodep _front;
-		int null_element;
-		//	friend class ListIterator<T>;
-	public:
-		size_t size() {
-			return this->_size;
-		}
-		T& front() {
-			if (!this->_front)
-				return this->null_element;
-			return this->_front->_elem;
-		};
-		bool is_null_element(T &elem) { return &elem == &this->null_element; };
 	};
 
 	template<class T>

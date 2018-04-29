@@ -5,14 +5,15 @@
 namespace MyContainer {
 
 	template<class T>
-	class CyclicList : public ListBase<T, ListNode<T>>
+	class CyclicList : public List<T>
 	{
 		using Node = ListNode<T>;
 		using Nodep = Node * ;
+		virtual void init(T &elem);
 	public:
+		CyclicList() : List<T>() {};
 		CyclicList(T &elem);
 		~CyclicList() { clear(); }
-		virtual void init(T &elem);
 		virtual void push_front(T &elem);
 		virtual void push_back(T &elem);
 		virtual void pop_front();

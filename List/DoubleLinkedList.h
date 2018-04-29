@@ -1,6 +1,6 @@
 #ifndef DOUBLE_LINKED_LIST_H
 #define DOUBLE_LINKED_LIST_H
-#include "List.h"
+#include "ListBase.h"
 
 namespace MyContainer {
 
@@ -32,6 +32,7 @@ namespace MyContainer {
 		};
 		DoubleLinkedList(T &elem);
 		~DoubleLinkedList() { clear(); };
+
 		virtual void show();
 		virtual void push_front(T &elem);
 		virtual void push_back(T &elem);
