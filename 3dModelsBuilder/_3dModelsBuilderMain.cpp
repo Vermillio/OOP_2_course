@@ -9,7 +9,7 @@ using namespace Concurrency;
 
 // Loads and initializes application assets when the application is loaded.
 _3dModelsBuilderMain::_3dModelsBuilderMain(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
-	m_deviceResources(deviceResources), m_pointerLocationX(0.0f)
+	m_deviceResources(deviceResources)
 {
 	// Register to be notified if the Device is lost or recreated
 	m_deviceResources->RegisterDeviceNotify(this);
@@ -81,16 +81,21 @@ void _3dModelsBuilderMain::Update()
 	m_timer.Tick([&]()
 	{
 		// TODO: Replace this with your app's content update functions.
-		m_sceneRenderer->Update(m_timer);
+		//m_sceneRenderer->Update(m_timer);
 		m_fpsTextRenderer->Update(m_timer);
 	});
+}
+
+bool _3dModelsBuilder::_3dModelsBuilderMain::parseModelFile(std::string filename)
+{
+	return m_sceneRenderer->parseModelFile(filename);
 }
 
 // Process all input from the user before updating game state
 void _3dModelsBuilderMain::ProcessInput()
 {
 	// TODO: Add per frame input handling here.
-	m_sceneRenderer->TrackingUpdate(m_pointerLocationX);
+	m_sceneRenderer->TrackingUpdate(prevMousePos, curMousePos);
 }
 
 // Renders the current frame according to the current application state.
@@ -123,6 +128,21 @@ bool _3dModelsBuilderMain::Render()
 	m_fpsTextRenderer->Render();
 
 	return true;
+}
+
+std::vector<UINT> _3dModelsBuilder::_3dModelsBuilderMain::rayCasting(float x, float y)
+{
+	return m_sceneRenderer->rayCasting(x, y);
+}
+
+void _3dModelsBuilder::_3dModelsBuilderMain::addCube(UINT title, float3 startPos, float sideLen, float3 rotation, float3 color)
+{
+	m_sceneRenderer->addCube(title, startPos, sideLen, rotation, color);
+}
+
+void _3dModelsBuilder::_3dModelsBuilderMain::addTetrahedron(UINT title, float3 startPos, float sideLen, float3 rotation, float3 color)
+{
+	m_sceneRenderer->addTetrahedron(title, startPos, sideLen, rotation, color);
 }
 
 // Notifies renderers that device resources need to be released.

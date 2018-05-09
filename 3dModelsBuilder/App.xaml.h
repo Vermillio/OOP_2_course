@@ -7,6 +7,7 @@
 
 #include "App.g.h"
 #include "DirectXPage.xaml.h"
+#include "MainPage.xaml.h"
 
 namespace _3dModelsBuilder
 {
@@ -23,6 +24,6 @@ namespace _3dModelsBuilder
 		void OnSuspending(Platform::Object^ sender, Windows::ApplicationModel::SuspendingEventArgs^ e);
 		void OnResuming(Platform::Object ^sender, Platform::Object ^args);
 		void OnNavigationFailed(Platform::Object ^sender, Windows::UI::Xaml::Navigation::NavigationFailedEventArgs ^e);
-		DirectXPage^ m_directXPage;
+		MainPage^ m_MainPage;
 	};
 }

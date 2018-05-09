@@ -5,6 +5,8 @@
 
 #include "pch.h"
 #include "DirectXPage.xaml.h"
+#include <fstream>
+#include <DirectXMath.h>
 
 using namespace _3dModelsBuilder;
 
@@ -23,6 +25,9 @@ using namespace Windows::UI::Xaml::Input;
 using namespace Windows::UI::Xaml::Media;
 using namespace Windows::UI::Xaml::Navigation;
 using namespace concurrency;
+
+
+double M_PI = 3.14159265358979323846;
 
 DirectXPage::DirectXPage():
 	m_windowVisible(true),
@@ -81,6 +86,10 @@ DirectXPage::DirectXPage():
 	m_inputLoopWorker = ThreadPool::RunAsync(workItemHandler, WorkItemPriority::High, WorkItemOptions::TimeSliced);
 
 	m_main = std::unique_ptr<_3dModelsBuilderMain>(new _3dModelsBuilderMain(m_deviceResources));
+
+	if (!readConfigFile()) {
+
+	}
 	m_main->StartRenderLoop();
 }
 
@@ -89,6 +98,10 @@ DirectXPage::~DirectXPage()
 	// Stop rendering and processing events on destruction.
 	m_main->StopRenderLoop();
 	m_coreInput->Dispatcher->StopProcessEvents();
+}
+
+void _3dModelsBuilder::DirectXPage::OnXMoveSliderClick()
+{
 }
 
 // Saves the current state of the app for suspend and terminate events.
@@ -110,6 +123,24 @@ void DirectXPage::LoadInternalState(IPropertySet^ state)
 
 	// Start rendering when the app is resumed.
 	m_main->StartRenderLoop();
+}
+
+bool _3dModelsBuilder::DirectXPage::readConfigFile()
+{
+	std::ifstream f(configFile);
+	std::string currentFilename;
+	if (!f.eof())
+		f >> currentFilename;
+	f.close();
+
+	std::wstring ws(currentFilename.begin(), currentFilename.end());
+	FileName->Text = ref new String(ws.c_str());
+	return parseModelFile(currentFilename);
+}
+
+bool _3dModelsBuilder::DirectXPage::parseModelFile(std::string filename)
+{
+	return m_main->parseModelFile(filename);
 }
 
 // Window event handlers.
@@ -162,23 +193,37 @@ void DirectXPage::AppBarButton_Click(Object^ sender, RoutedEventArgs^ e)
 
 void DirectXPage::OnPointerPressed(Object^ sender, PointerEventArgs^ e)
 {
+//	if (e->KeyModifiers==WM_RBUTTONDOWN)
 	// When the pointer is pressed begin tracking the pointer movement.
+//	IsSaved = false;
+
 	m_main->StartTracking();
+	prevPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	RayCasting(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
 }
+
+//void DirectXPage::RightTapped()
 
 void DirectXPage::OnPointerMoved(Object^ sender, PointerEventArgs^ e)
 {
 	// Update the pointer tracking code.
 	if (m_main->IsTracking())
 	{
-		m_main->TrackingUpdate(e->CurrentPoint->Position.X);
+		m_main->StartPointerMove();
+		float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+		m_main->TrackingUpdate(prevPointerPos, curPointerPos);
+		prevPointerPos = curPointerPos;
 	}
 }
 
 void DirectXPage::OnPointerReleased(Object^ sender, PointerEventArgs^ e)
 {
+	if (m_main->IsTracking()) {
+		m_main->StopTracking();
 	// Stop tracking pointer movement when the pointer is released.
-	m_main->StopTracking();
+		if (m_main->IsPointerMove())
+			m_main->StopPointerMove();
+	}
 }
 
 void DirectXPage::OnCompositionScaleChanged(SwapChainPanel^ sender, Object^ args)
@@ -193,4 +238,109 @@ void DirectXPage::OnSwapChainPanelSizeChanged(Object^ sender, SizeChangedEventAr
 	critical_section::scoped_lock lock(m_main->GetCriticalSection());
 	m_deviceResources->SetLogicalSize(e->NewSize);
 	m_main->CreateWindowSizeDependentResources();
+}
+
+
+void _3dModelsBuilder::DirectXPage::XMoveSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e)
+{
+
+}
+
+
+void _3dModelsBuilder::DirectXPage::AddModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	showModelOptions();
+
+	//show model configuration dialog
+}
+
+
+
+void _3dModelsBuilder::DirectXPage::OkButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	float3 startPoint;
+	startPoint.x=float(XMoveSlider->Value);
+	startPoint.y = float(YMoveSlider->Value);
+	startPoint.z = float(ZMoveSlider->Value);
+
+	float sideLen = float(ScaleSlider->Value);
+	float3 rotation;
+	rotation.x = DirectX::XMConvertToRadians(XRotateSlider->Value);
+	rotation.y = DirectX::XMConvertToRadians(YRotateSlider->Value);
+	rotation.z = DirectX::XMConvertToRadians(ZRotateSlider->Value);
+
+	float3 color;
+	color.x = RedSlider->Value/255.0f;
+	color.y = GreenSlider->Value / 255.0f;
+	color.z = BlueSlider->Value / 255.0f;
+
+	if (ModelTypeSwitch->IsOn)
+		addTetrahedron(defaultTetrahedronName+std::to_string(modelTitles.size()), startPoint, sideLen, rotation, color);
+	else 
+		addCube(defaultTetrahedronName + std::to_string(modelTitles.size()), startPoint, sideLen, rotation, color);
+	
+	hideModelOptions();
+}
+
+void _3dModelsBuilder::DirectXPage::showModelOptions()
+{
+	AddModelButton->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+	AddModelOptions->Visibility = Windows::UI::Xaml::Visibility::Visible;
+	Options->Visibility = Windows::UI::Xaml::Visibility::Visible;
+}
+
+void _3dModelsBuilder::DirectXPage::hideModelOptions()
+{
+	AddModelButton->Visibility = Windows::UI::Xaml::Visibility::Visible;
+	AddModelOptions->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+	Options->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+}
+
+void _3dModelsBuilder::DirectXPage::RayCasting(float x, float y)
+{
+	std::vector<UINT> titlesSelected = m_main->rayCasting(x, y);
+}
+
+void _3dModelsBuilder::DirectXPage::addCube(const std::string title, float3 startPos, float sideLen, float3 rotation, float3 color)
+{
+	modelTitles.push_back(title);
+	m_main->addCube(modelTitles.size()-1, startPos, sideLen, rotation, color);
+	//redrawModelsList();
+}
+
+void _3dModelsBuilder::DirectXPage::addTetrahedron(const std::string title, float3 startPos, float sideLen, float3 rotation, float3 color)
+{
+	modelTitles.push_back(title);
+	m_main->addTetrahedron(modelTitles.size()-1, startPos, sideLen, rotation, color);
+	//redrawModelsList();
+}
+
+void _3dModelsBuilder::DirectXPage::CancelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	hideModelOptions();
+}
+
+void _3dModelsBuilder::DirectXPage::swapChainPanel_RightTapped(Platform::Object ^ sender, Windows::UI::Xaml::Input::RightTappedRoutedEventArgs ^ e)
+{
+	swapChainPanel->ContextFlyout->ShowAttachedFlyout((SwapChainPanel^)sender);
+		//ShowAttachedFlyout(sender);
+}
+
+
+
+void _3dModelsBuilder::DirectXPage::MenuFlyoutItem_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	action = 0;
+}
+
+
+void _3dModelsBuilder::DirectXPage::MenuFlyoutItem_Click_1(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	action = 1;
+}
+
+
+void _3dModelsBuilder::DirectXPage::MenuFlyoutItem_Click_2(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	action = 2;
 }

@@ -5,6 +5,8 @@
 
 #include "pch.h"
 #include "DirectXPage.xaml.h"
+#include <fstream>
+#include <string>
 
 using namespace _3dModelsBuilder;
 
@@ -28,6 +30,19 @@ using namespace Windows::UI::Xaml::Navigation;
 /// </summary>
 App::App()
 {
+	//Load settings
+	std::ifstream fin("settings.cfg");
+	if (fin.good()) {
+		std::string theme;
+		fin >> theme;
+		if (theme == "light")
+			this->RequestedTheme = ApplicationTheme::Light;
+		else if (theme == "dark")
+			this->RequestedTheme = ApplicationTheme::Dark;
+		else this->RequestedTheme = ApplicationTheme::Light;
+	} 
+	else this->RequestedTheme = ApplicationTheme::Light;
+	fin.close();
 	InitializeComponent();
 	Suspending += ref new SuspendingEventHandler(this, &App::OnSuspending);
 	Resuming += ref new EventHandler<Object^>(this, &App::OnResuming);
@@ -48,15 +63,15 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
 	}
 #endif
 
-	if (m_directXPage == nullptr)
-	{
-		m_directXPage = ref new DirectXPage();
-	}
+	//if (m_MainPage == nullptr)
+	//{
+	//	m_MainPage = ref new MainPage();
+	//}
 
-	if (e->PreviousExecutionState == ApplicationExecutionState::Terminated)
-	{
-		m_directXPage->LoadInternalState(ApplicationData::Current->LocalSettings->Values);
-	}
+	//if (e->PreviousExecutionState == ApplicationExecutionState::Terminated)
+	//{
+	//	m_MainPage->LoadInternalState(ApplicationData::Current->LocalSettings->Values);
+	//}
 
 	auto rootFrame = dynamic_cast<Frame^>(Window::Current->Content);
 
@@ -75,7 +90,7 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
 			// When the navigation stack isn't restored navigate to the first page,
 			// configuring the new page by passing required information as a navigation
 			// parameter
-			rootFrame->Navigate(TypeName(DirectXPage::typeid), e->Arguments);
+			rootFrame->Navigate(TypeName(MainPage::typeid), e->Arguments);
 		}
 		// Place the frame in the current Window
 		Window::Current->Content = rootFrame;
@@ -108,7 +123,7 @@ void App::OnSuspending(Object^ sender, SuspendingEventArgs^ e)
 	(void) sender;	// Unused parameter
 	(void) e;	// Unused parameter
 
-	m_directXPage->SaveInternalState(ApplicationData::Current->LocalSettings->Values);
+//	m_MainPage->SaveInternalState(ApplicationData::Current->LocalSettings->Values);
 }
 
 /// <summary>
@@ -121,7 +136,7 @@ void App::OnResuming(Object ^sender, Object ^args)
 	(void) sender; // Unused parameter
 	(void) args; // Unused parameter
 
-	m_directXPage->LoadInternalState(ApplicationData::Current->LocalSettings->Values);
+//	m_MainPage->LoadInternalState(ApplicationData::Current->LocalSettings->Values);
 }
 
 /// <summary>

@@ -1,23 +1,50 @@
 ﻿#include "pch.h"
 #include "Sample3DSceneRenderer.h"
-
 #include "..\Common\DirectXHelper.h"
+#include <fstream>
 
 using namespace _3dModelsBuilder;
-
 using namespace DirectX;
 using namespace Windows::Foundation;
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 Sample3DSceneRenderer::Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
-	m_degreesPerSecond(45),
+	m_degreesPerSecond(0.2),
 	m_indexCount(0),
 	m_tracking(false),
-	m_deviceResources(deviceResources)
+	m_pointerMove(false),
+	m_deviceResources(deviceResources),
+	isVertexBufferSet(false),
+	isIndexBufferSet(false)
 {
-	CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
+	CreateDeviceDependentResources();
+}
+
+
+float2 _3dModelsBuilder::Sample3DSceneRenderer::normalizeCoordinates(float2 mousePoint) {
+	Size screenSize = m_deviceResources->GetLogicalSize();
+	float x_ = (2.0f * mousePoint.x) / screenSize.Width - 1.0f;
+	float y_ = 1.0f - (2.0f * mousePoint.y) / screenSize.Height;
+	return float2(x_, y_);
+}
+
+bool _3dModelsBuilder::Sample3DSceneRenderer::parseModelFile(std::string filename)
+{
+	std::string extension = ".model";
+	if (filename.size() <= extension.size())
+		return false;
+	if (filename.substr(filename.size() - extension.size(), extension.size()) != ".model")
+		return false;
+	std::ifstream f(filename);
+	if (!f.good())
+		return false;
+	std::string c;
+	while (!f.eof()) {
+		f >> c;
+	}
+	return true;
 }
 
 // Initializes view parameters when the window size changes.
@@ -30,9 +57,7 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 	// This is a simple example of change that can be made when the app is in
 	// portrait or snapped view.
 	if (aspectRatio < 1.0f)
-	{
 		fovAngleY *= 2.0f;
-	}
 
 	// Note that the OrientationTransform3D matrix is post-multiplied here
 	// in order to correctly orient the scene to match the display orientation.
@@ -46,7 +71,7 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 		aspectRatio,
 		0.01f,
 		100.0f
-		);
+	);
 
 	XMFLOAT4X4 orientation = m_deviceResources->GetOrientationTransform3D();
 
@@ -55,36 +80,32 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 	XMStoreFloat4x4(
 		&m_constantBufferData.projection,
 		XMMatrixTranspose(perspectiveMatrix * orientationMatrix)
-		);
+	);
 
 	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
 	static const XMVECTORF32 eye = { 0.0f, 0.7f, 1.5f, 0.0f };
 	static const XMVECTORF32 at = { 0.0f, -0.1f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
-
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
+
+	m_constantBufferData.lightPos = { -1.0f, 1.0f, -1.0f };
+	m_constantBufferData.viewPos = { 0.0f, 0.7f, 1.5f };
+	m_constantBufferData.lightColor = { 1.0f, 1.0f, 1.0f };
 }
 
-// Called once per frame, rotates the cube and calculates the model and view matrices.
-void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
-{
-	if (!m_tracking)
-	{
-		// Convert degrees to radians, then convert seconds to rotation angle
-		float radiansPerSecond = XMConvertToRadians(m_degreesPerSecond);
-		double totalRotation = timer.GetTotalSeconds() * radiansPerSecond;
-		float radians = static_cast<float>(fmod(totalRotation, XM_2PI));
+//// Called once per frame, rotates the cube and calculates the model and view matrices.
+//void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
+//{
+//	if (!m_tracking)
+//	{
+//		// Convert degrees to radians, then convert seconds to rotation angle
+//		float radiansPerSecond = XMConvertToRadians(m_degreesPerSecond);
+//		double totalRotation = timer.GetTotalSeconds() * radiansPerSecond;
+//		float radians = static_cast<float>(fmod(totalRotation, XM_2PI));
+//
+//	}
+//}
 
-		Rotate(radians);
-	}
-}
-
-// Rotate the 3D cube model a set amount of radians.
-void Sample3DSceneRenderer::Rotate(float radians)
-{
-	// Prepare to pass the updated model matrix to the shader
-	XMStoreFloat4x4(&m_constantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
-}
 
 void Sample3DSceneRenderer::StartTracking()
 {
@@ -92,12 +113,17 @@ void Sample3DSceneRenderer::StartTracking()
 }
 
 // When tracking, the 3D cube can be rotated around its Y axis by tracking pointer position relative to the output screen width.
-void Sample3DSceneRenderer::TrackingUpdate(float positionX)
+void Sample3DSceneRenderer::TrackingUpdate(float2 prevPos, float2 curPos)
 {
 	if (m_tracking)
 	{
-		float radians = XM_2PI * 2.0f * positionX / m_deviceResources->GetOutputSize().Width;
-		Rotate(radians);
+		float2 prevPosNormalized = normalizeCoordinates(prevPos);
+		float2 curPosNormalized = normalizeCoordinates(curPos);
+		for (size_t i = 0; i < models.size(); ++i) {
+			if (models[i].isSelected()) {
+				models[i].applyAction(prevPosNormalized, curPosNormalized);
+			}
+		}
 	}
 }
 
@@ -111,73 +137,13 @@ void Sample3DSceneRenderer::Render()
 {
 	// Loading is asynchronous. Only draw geometry after it's loaded.
 	if (!m_loadingComplete)
-	{
 		return;
-	}
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
-	// Prepare the constant buffer to send it to the graphics device.
-	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
-		0,
-		NULL,
-		&m_constantBufferData,
-		0,
-		0,
-		0
-		);
-
-	// Each vertex is one instance of the VertexPositionColor struct.
-	UINT stride = sizeof(VertexPositionColor);
-	UINT offset = 0;
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer.GetAddressOf(),
-		&stride,
-		&offset
-		);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer.Get(),
-		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
-		0
-		);
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	context->IASetInputLayout(m_inputLayout.Get());
-
-	// Attach our vertex shader.
-	context->VSSetShader(
-		m_vertexShader.Get(),
-		nullptr,
-		0
-		);
-
-	// Send the constant buffer to the graphics device.
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-		);
-
-	// Attach our pixel shader.
-	context->PSSetShader(
-		m_pixelShader.Get(),
-		nullptr,
-		0
-		);
-
-	// Draw the objects.
-	context->DrawIndexed(
-		m_indexCount,
-		0,
-		0
-		);
+	for (size_t i = 0; i < models.size(); ++i) {
+		models[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout);
+	}
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources()
@@ -194,13 +160,14 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 				fileData.size(),
 				nullptr,
 				&m_vertexShader
-				)
-			);
+			)
+		);
 
-		static const D3D11_INPUT_ELEMENT_DESC vertexDesc [] =
+		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
 		{
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 		};
 
 		DX::ThrowIfFailed(
@@ -210,8 +177,8 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 				&fileData[0],
 				fileData.size(),
 				&m_inputLayout
-				)
-			);
+			)
+		);
 	});
 
 	// After the pixel shader file is loaded, create the shader and constant buffer.
@@ -222,92 +189,29 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 				fileData.size(),
 				nullptr,
 				&m_pixelShader
-				)
-			);
+			)
+		);
 
-		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer) , D3D11_BIND_CONSTANT_BUFFER);
+		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		//constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+		//constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		//constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		//constantBufferDesc.MiscFlags = 0;
+		//constantBufferDesc.StructureByteStride = 0;
+
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreateBuffer(
 				&constantBufferDesc,
 				nullptr,
 				&m_constantBuffer
-				)
-			);
+			)
+		);
+		int in = 0;
 	});
 
-	// Once both shaders are loaded, create the mesh.
-	auto createCubeTask = (createPSTask && createVSTask).then([this] () {
-
-		// Load mesh vertices. Each vertex has a position and a color.
-		static const VertexPositionColor cubeVertices[] = 
-		{
-			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
-			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
-			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
-			{XMFLOAT3( 0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
-			{XMFLOAT3( 0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
-			{XMFLOAT3( 0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
-			{XMFLOAT3( 0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
-		};
-
-		D3D11_SUBRESOURCE_DATA vertexBufferData = {0};
-		vertexBufferData.pSysMem = cubeVertices;
-		vertexBufferData.SysMemPitch = 0;
-		vertexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(cubeVertices), D3D11_BIND_VERTEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&vertexBufferDesc,
-				&vertexBufferData,
-				&m_vertexBuffer
-				)
-			);
-
-		// Load mesh indices. Each trio of indices represents
-		// a triangle to be rendered on the screen.
-		// For example: 0,2,1 means that the vertices with indexes
-		// 0, 2 and 1 from the vertex buffer compose the 
-		// first triangle of this mesh.
-		static const unsigned short cubeIndices [] =
-		{
-			0,2,1, // -x
-			1,2,3,
-
-			4,5,6, // +x
-			5,7,6,
-
-			0,1,5, // -y
-			0,5,4,
-
-			2,6,7, // +y
-			2,7,3,
-
-			0,4,6, // -z
-			0,6,2,
-
-			1,3,7, // +z
-			1,7,5,
-		};
-
-		m_indexCount = ARRAYSIZE(cubeIndices);
-
-		D3D11_SUBRESOURCE_DATA indexBufferData = {0};
-		indexBufferData.pSysMem = cubeIndices;
-		indexBufferData.SysMemPitch = 0;
-		indexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(cubeIndices), D3D11_BIND_INDEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&indexBufferDesc,
-				&indexBufferData,
-				&m_indexBuffer
-				)
-			);
-	});
 
 	// Once the cube is loaded, the object is ready to be rendered.
-	createCubeTask.then([this] () {
+	createPSTask.then([this]() {
 		m_loadingComplete = true;
 	});
 }
@@ -322,3 +226,601 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
 }
+
+Cube::Cube(UINT title, const float3 &startPoint, float sideLen)
+{
+	_title = title;
+	create(startPoint, sideLen);
+}
+
+void Cube::create(const float3 &startPoint, float sideLen)
+{
+	float3 delta = float3(sideLen, sideLen, sideLen);
+	float Ax = startPoint.x - delta.x / 2.0f;
+	float Bx = startPoint.x + delta.x / 2.0f;
+	float Ay = startPoint.y - delta.y / 2.0f;
+	float By = startPoint.y + delta.y / 2.0f;
+	float Az = startPoint.z - delta.z / 2.0f;
+	float Bz = startPoint.z + delta.z / 2.0f;
+	// position color
+	vertices = {
+	{ float3(Ax, Ay, Az), float3(0.0f, 0.0f, 0.0f), float3() },
+	{ float3(Ax,  By, Az), float3(0.0f, 1.0f, 0.0f), float3() },
+	{ float3(Ax, Ay, Bz), float3(0.0f, 0.0f, 1.0f), float3() },
+	{ float3(Ax,  By,  Bz), float3(0.0f, 1.0f, 1.0f), float3() },
+
+	{ float3(Bx,  Ay, Az), float3(1.0f, 1.0f, 0.0f), float3() },
+	{ float3(Bx,  Ay,  Bz), float3(1.0f, 1.0f, 1.0f), float3() },
+	{ float3(Bx, By,  Az), float3(1.0f, 0.0f, 1.0f), float3() },
+	{ float3(Bx, By, Bz), float3(1.0f, 0.0f, 0.0f), float3() },
+
+
+	{ float3(Ax, Ay, Az), float3(0.0f, 0.0f, 0.0f), float3() },
+	{ float3(Ax,  Ay, Bz), float3(0.0f, 1.0f, 0.0f), float3() },
+	{ float3(Bx,  Ay, Bz), float3(1.0f, 1.0f, 0.0f), float3() },
+	{ float3(Bx, Ay, Az), float3(1.0f, 0.0f, 0.0f), float3() },
+
+	{ float3(Ax,  By, Az), float3(0.0f, 1.0f, 0.0f), float3() },
+	{ float3(Bx,  By, Az), float3(1.0f, 1.0f, 0.0f), float3() },
+	{ float3(Bx,  By,  Bz), float3(1.0f, 1.0f, 1.0f), float3() },
+	{ float3(Ax,  By,  Bz), float3(0.0f, 1.0f, 1.0f), float3() },
+
+	{ float3(Ax, Ay, Az), float3(0.0f, 0.0f, 0.0f), float3() },
+	{ float3(Bx, Ay, Az), float3(1.0f, 0.0f, 0.0f), float3() },
+	{ float3(Bx, By,  Az), float3(1.0f, 0.0f, 1.0f), float3() },
+	{ float3(Ax, By, Az), float3(0.0f, 0.0f, 1.0f), float3() },
+
+
+	{ float3(Ax, Ay, Bz), float3(0.0f, 0.0f, 1.0f), float3() },
+	{ float3(Ax,  By,  Bz), float3(0.0f, 1.0f, 1.0f), float3() },
+	{ float3(Bx,  By,  Bz), float3(1.0f, 1.0f, 1.0f), float3() },
+	{ float3(Bx, Ay,  Bz), float3(1.0f, 0.0f, 1.0f), float3() },
+
+	};
+
+	// triangles
+	indices = {
+		0,1,2, // -x
+		2,1,3,
+
+		4,5,6, // +x
+		5,7,6,
+
+		8,9,10, // -y
+		8,10,11,
+
+		12,13,14, // +y
+		12,14,15,
+
+		16,17,18, // -z
+		16,18,19,
+
+		20,21,22, // +z
+		20,22,23,
+
+		2,1,0, // -x
+		3,1,2,
+
+		6,5,4, // +x
+		6,7,4,
+
+		10,9,8, // -y
+		11,10,8,
+
+		14,13,12, // +y
+		15,14,12,
+
+		18,17,16, // -z
+		19,18,16,
+
+		22,21,20, // +z
+		23,22,20
+	};
+
+	calcNormals();
+	position = startPoint;
+	scaleCoeff = 1;
+}
+
+Tetrahedron::Tetrahedron(UINT title, const float3 &startPoint, float sideLen)
+{
+	_title = title;
+	create(startPoint, sideLen);
+}
+
+void Tetrahedron::create(const float3 &startPoint, float sideLen)
+{
+	float3 A = float3(startPoint.x, startPoint.y + sideLen / sqrt(3), startPoint.z);
+	float3 B = float3(startPoint.x + sideLen / 2, startPoint.y - sqrt(6)*sideLen / 3, startPoint.z - sqrt(6)*sideLen / 3);
+	float3 C = float3(startPoint.x - sideLen / 2, startPoint.y - sqrt(6)*sideLen / 3, startPoint.z - sqrt(6)*sideLen / 3);
+	float3 D = float3(startPoint.x, startPoint.y - sqrt(6)*sideLen / 3, startPoint.z + sideLen / sqrt(3));
+	//position color
+	vertices = {
+	{ A, float3(0.0f, 0.0f, 0.0f), float3() },
+	{ B, float3(0.0f, 0.0f, 1.0f), float3() },
+	{ C, float3(0.0f, 1.0f, 0.0f), float3() },
+
+	{ B, float3(0.0f, 0.0f, 1.0f), float3() },
+	{ C, float3(0.0f, 1.0f, 0.0f), float3() },
+	{ D, float3(0.0f, 1.0f, 1.0f), float3() },
+
+	{ A, float3(0.0f, 0.0f, 0.0f), float3() },
+	{ C, float3(0.0f, 1.0f, 0.0f), float3() },
+	{ D, float3(0.0f, 1.0f, 1.0f), float3() },
+
+	{ A, float3(0.0f, 0.0f, 0.0f), float3() },
+	{ B, float3(0.0f, 0.0f, 1.0f), float3() },
+	{ D, float3(0.0f, 1.0f, 1.0f), float3() },
+	};
+	//triangles
+	indices = {
+		0,1,2,
+		2,1,0,
+		3,4,5,
+		5,4,3,
+		6,7,8,
+		8,7,6,
+		9,10,11,
+		11,10,9,
+	};
+
+	position = startPoint;
+	scaleCoeff = 1;
+	calcNormals();
+}
+
+void _3dModelsBuilder::Sample3DSceneRenderer::addCube(UINT title)
+{
+	models.push_back(Cube(title, float3(0, 0, 0), 0.5));
+	models[models.size() - 1].setConstantBuffer(m_constantBufferData);
+	models[models.size() - 1].createAxes();
+}
+
+void _3dModelsBuilder::Sample3DSceneRenderer::addCube(UINT title, float3 startPoint, float sideLen, float3 rotation, float3 color)
+{
+	Cube cube(title, startPoint, sideLen);
+	cube.rotate(rotation);
+	cube.setColorAll(color);
+	models.push_back(cube);
+	models[models.size() - 1].setConstantBuffer(m_constantBufferData);
+	models[models.size() - 1].createAxes();
+}
+
+void _3dModelsBuilder::Sample3DSceneRenderer::addTetrahedron(UINT title)
+{
+	models.push_back(Tetrahedron(title, float3(0, 0, 0), 0.8));
+	models[models.size() - 1].setConstantBuffer(m_constantBufferData);
+	models[models.size() - 1].createAxes();
+}
+
+void _3dModelsBuilder::Sample3DSceneRenderer::addTetrahedron(UINT title, float3 startPoint, float sideLen, float3 rotation, float3 color)
+{
+	Tetrahedron tetrahedron(title, startPoint, sideLen);
+	tetrahedron.rotateAbs(rotation);
+	tetrahedron.setColorAll(color);
+	models.push_back(tetrahedron);
+	models[models.size() - 1].setConstantBuffer(m_constantBufferData);
+	models[models.size() - 1].createAxes();
+}
+
+void _3dModelsBuilder::Model::calcNormals()
+{
+	for (size_t i = 0; i < indices.size(); i+=3) {
+		float3 n = normal(vertices[indices[i]].pos, vertices[indices[i + 1]].pos, vertices[indices[i + 2]].pos);
+		vertices[indices[i]].normal = vertices[indices[i+1]].normal = vertices[indices[i+2]].normal = n;
+	}
+}
+
+float3 _3dModelsBuilder::Model::normal(float3 v1, float3 v2, float3 v3)
+{
+	XMVECTOR v1_ = XMLoadFloat3(&v1);
+	XMVECTOR v2_ = XMLoadFloat3(&v2);
+	XMVECTOR v3_ = XMLoadFloat3(&v3);
+	XMVECTOR n = XMVector3Normalize(XMVector3Cross(XMVectorSubtract(v2_, v1_), XMVectorSubtract(v3_, v1_)));
+	float3 res;
+	XMStoreFloat3(&res, n);
+	return res;
+}
+
+_3dModelsBuilder::Model::Model()
+{
+	_isSelected = false;
+	isVertexBufferSet = false;
+	isIndexBufferSet = false;
+	XMStoreFloat4x4(&m_constantBufferData.model, XMMatrixIdentity());
+	rotation = float3(0, 0, 0);
+	position = float3(0, 0, 0);
+	scaleCoeff = 0;
+}
+
+void _3dModelsBuilder::Model::updateBuffers(const std::shared_ptr<DX::DeviceResources>& deviceResources)
+{
+	auto context = deviceResources->GetD3DDeviceContext();
+	if (isVertexBufferSet)
+	{
+		// This is where it copies the new vertices to the buffer.
+		// but it's causing flickering in the entire screen...
+		D3D11_MAPPED_SUBRESOURCE resource;
+		context->Map(m_vertexBuffers.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+		memcpy(resource.pData, &vertices[0], sizeof(Vertex)*vertices.size());
+		context->Unmap(m_vertexBuffers.Get(), 0);
+	}
+	else {
+		D3D11_SUBRESOURCE_DATA resourceData;
+		ZeroMemory(&resourceData, sizeof(resourceData));
+		resourceData.pSysMem = &vertices[0];
+		resourceData.SysMemPitch = vertices.size();
+		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(Vertex)*vertices.size(), D3D11_BIND_VERTEX_BUFFER);
+		vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+		vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		vertexBufferDesc.MiscFlags = 0;
+
+		deviceResources->GetD3DDevice()->CreateBuffer(
+			&vertexBufferDesc,
+			&resourceData,
+			&m_vertexBuffers
+		);
+
+		isVertexBufferSet = true;
+	}
+
+	if (isIndexBufferSet) {
+		D3D11_MAPPED_SUBRESOURCE resource;
+		context->Map(m_indexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+		memcpy(resource.pData, &indices[0], sizeof(unsigned int) * sizeof(indices));
+		context->Unmap(m_indexBuffer.Get(), 0);
+	}
+	else {
+		int m_indexCount = sizeof(indices);
+		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+		indexBufferData.pSysMem = &indices[0];
+		indexBufferData.SysMemPitch = 0;
+		indexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(indices) * sizeof(unsigned int), D3D11_BIND_INDEX_BUFFER);
+		indexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+		indexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		indexBufferDesc.MiscFlags = 0;
+		DX::ThrowIfFailed(
+			deviceResources->GetD3DDevice()->CreateBuffer(
+				&indexBufferDesc,
+				&indexBufferData,
+				&m_indexBuffer
+			)
+		);
+		isIndexBufferSet = true;
+	}
+
+			// Each vertex is one instance of the VertexPositionColor struct.
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+		auto p = m_vertexBuffers.Get();
+		context->IASetVertexBuffers(
+			0,
+			1,
+			&p,
+			&stride,
+			&offset
+		);
+
+		context->IASetIndexBuffer(
+			m_indexBuffer.Get(),
+			DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
+			0
+		);
+}
+
+void _3dModelsBuilder::Model::setColorAll(float3 color)
+{
+	for (size_t i = 0; i < vertices.size(); ++i)
+		vertices[i].color = color;
+}
+
+void _3dModelsBuilder::Model::setColorVertex(float3 color, UINT pos)
+{
+	vertices[pos].color = color;
+}
+
+void _3dModelsBuilder::Model::rotateAbs(float3 rotation) {
+	rotate(rotation - this->rotation);
+}
+
+void _3dModelsBuilder::Model::moveAbs(float3 position)
+{
+	move(position-this->position);
+}
+
+void _3dModelsBuilder::Model::scaleAbs(float k)
+{
+	scale(k / scaleCoeff);
+}
+
+void _3dModelsBuilder::Model::rotate(float3 rotation){
+
+	float3 tmpPos = position;
+	moveAbs(float3(0,0,0));
+	XMMATRIX current = XMLoadFloat4x4(&m_constantBufferData.model);
+	current = XMMatrixMultiply(
+		XMMatrixMultiply(
+		XMMatrixMultiply(XMMatrixRotationX(rotation.x),
+			XMMatrixRotationY(rotation.y)),
+		XMMatrixTranspose(XMMatrixRotationZ(rotation.z))), current);
+	XMStoreFloat4x4(&m_constantBufferData.model, current);
+	
+	for (size_t i = 0; i < axes.size(); ++i) {
+		axes[i].rotate(rotation);
+	}
+	this->rotation = this->rotation + rotation;
+	move(tmpPos);
+}
+
+void _3dModelsBuilder::Model::move(float3 position)
+{
+	XMMATRIX current = XMLoadFloat4x4(&m_constantBufferData.model);
+	
+	current = XMMatrixMultiply(
+		XMMatrixTranspose(XMMatrixTranslation(position.x, position.y, position.z)), current);
+
+	XMStoreFloat4x4(&m_constantBufferData.model, current);
+	if (axes.size() != 0) {
+		axes[0].move(position);
+		axes[1].move(position);
+		axes[2].move(position);
+	}
+//	axes[0].scale((this->position.x + position.x + axes[0].len) / (this->position.x + axes[0].len));
+//	axes[1].scale((this->position.y + position.y + axes[1].len) / (this->position.y + axes[1].len));
+//	axes[2].scale((this->position.z + position.z + axes[2].len) / (this->position.z + axes[2].len));
+	this->position = this->position + position;
+}
+
+void _3dModelsBuilder::Model::scale(float k)
+{
+	XMMATRIX current = XMLoadFloat4x4(&m_constantBufferData.model);
+
+	current = XMMatrixMultiply(
+		XMMatrixScaling(position.x, position.y, position.z), current);
+
+	XMStoreFloat4x4(&m_constantBufferData.model, current);
+	this->scaleCoeff *= k;
+}
+
+void _3dModelsBuilder::Model::setConstantBuffer(const ModelViewProjectionConstantBuffer & buff)
+{
+	XMFLOAT4X4 model = m_constantBufferData.model;
+	m_constantBufferData = buff;
+	m_constantBufferData.model = model;
+}
+
+bool _3dModelsBuilder::Model::checkRayCollision(const float3 &rayOrigin, const float3 &rayDirection)
+{
+//	float3 rayOriginTransformed_ = transformFloat3(rayOrigin, m_constantBufferData.model);
+//	rayOriginTransformed_ = transformFloat3(rayOriginTransformed_, m_constantBufferData.view);
+//	rayOriginTransformed_ = transformFloat3(rayOriginTransformed_, m_constantBufferData.projection);
+
+//	float3 rayDirTransformed_ = transformFloat3(rayDirection, m_constantBufferData.model);
+//	rayDirTransformed_ = transformFloat3(rayDirTransformed_, m_constantBufferData.view);
+//	rayDirTransformed_ = transformFloat3(rayDirTransformed_, m_constantBufferData.projection);
+
+	for (size_t i = 0; i < indices.size(); i += 3) {
+		float3 v0 = vertices[indices[i]].pos;
+			//transformFloat3(transformFloat3(transformFloat3(vertices[indices[i]].pos, m_constantBufferData.model), m_constantBufferData.view), m_constantBufferData.projection);
+		float3 v1 = vertices[indices[i+1]].pos;
+			//transformFloat3(transformFloat3(transformFloat3(vertices[indices[i+1]].pos, m_constantBufferData.model), m_constantBufferData.view), m_constantBufferData.projection);
+		float3 v2 = vertices[indices[i + 2]].pos;
+			//transformFloat3(transformFloat3(transformFloat3(vertices[indices[i+2]].pos, m_constantBufferData.model), m_constantBufferData.view), m_constantBufferData.projection);
+
+		if (intersectRayTriangle(rayOrigin, rayDirection, v0, v1,v2) ||
+			intersectRayTriangle(rayOrigin, rayDirection, v2, v1, v0))
+			return true;
+	}
+	return false;
+}
+
+void _3dModelsBuilder::Model::createAxes()
+{
+	axes.resize(3);
+	axes[0] = Axis(float3(0,0,0), 0.5f);
+	axes[1] = Axis(float3(0,0,0), 0.5f);
+	axes[2] = Axis(float3(0,0,0), 0.5f);
+	axes[1].rotateAbs(float3(0, 0, -XM_PI / 2));
+	axes[2].rotateAbs(float3(-XM_PI / 2, 0, 0));
+
+	axes[0].move(position);
+	axes[1].move(position);
+	axes[2].move(position);
+
+	axes[0].setColorAll(float3(1, 0, 0));
+	axes[1].setColorAll(float3(0, 1, 0));
+	axes[2].setColorAll(float3(0, 0, 1));
+	axes[0].setConstantBuffer(m_constantBufferData);
+	axes[1].setConstantBuffer(m_constantBufferData);
+	axes[2].setConstantBuffer(m_constantBufferData);
+}
+
+void _3dModelsBuilder::Model::render(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout)
+{
+	updateBuffers(m_deviceResources);
+
+	// Prepare the constant buffer to send it to the graphics device.
+	context->UpdateSubresource1(
+		m_constantBuffer.Get(),
+		0,
+		NULL,
+		&m_constantBufferData,
+		0,
+		0,
+		0
+	);
+
+//	if (!isSelected())
+//		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//	else
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+	context->IASetInputLayout(m_inputLayout.Get());
+
+	// Attach our vertex shader.
+	context->VSSetShader(
+		m_vertexShader.Get(),
+		nullptr,
+		0
+	);
+
+	// Send the constant buffer to the graphics device.
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+
+	// Attach our pixel shader.
+	context->PSSetShader(
+		m_pixelShader.Get(),
+		nullptr,
+		0
+	);
+
+	// Draw the objects.
+	context->DrawIndexed(
+		indices.size(),
+		0,
+		0
+	);
+
+
+	if (isSelected())
+		for (size_t i = 0; i < axes.size(); ++i)
+			axes[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout);
+}
+
+void _3dModelsBuilder::Model::checkAxesCollision(float3 rayOrigin, float3 rayDirection)
+{
+	if (axes.size() == 0)
+		return;
+	if (axes[0].checkRayCollision(rayOrigin, rayDirection)) {
+		selectionAction = 1;
+	}
+	else if (axes[1].checkRayCollision(rayOrigin, rayDirection)) {
+		selectionAction = 2;
+	}
+	else if (axes[2].checkRayCollision(rayOrigin, rayDirection)) {
+		selectionAction = 3;
+	}
+}
+
+void _3dModelsBuilder::Model::applyAction(float2 prevMP, float2 curMP)
+{
+	if (selectionAction == 0) {
+		rotate(float3(curMP.x-prevMP.x, curMP.y-prevMP.y, 0));
+	}
+	else if (selectionAction == 1) {
+		move(float3(curMP.x - prevMP.x, 0,0));
+	}
+	else if (selectionAction == 2) {
+		move(float3(0,curMP.y - prevMP.y, 0));
+	}
+	else if (selectionAction == 3) {
+		move(float3(0, 0, -(curMP.y - prevMP.y)));
+	}
+}
+
+std::vector<UINT> _3dModelsBuilder::Sample3DSceneRenderer::rayCasting(float x, float y)
+{
+	std::vector<UINT> collidingModels;
+
+	float2 point = normalizeCoordinates(float2(x, y));
+	float3 rayOrigin = float3(point.x, point.y, 10.0f);
+	float3 rayDirection = float3(point.x, point.y, -1.0f);
+
+	for (size_t i = 0; i < models.size(); ++i) {
+		if (models[i].isSelected()) {
+			models[i].checkAxesCollision(rayOrigin, rayDirection);
+			collidingModels.push_back(models[i].title());
+		}
+		if (models[i].checkRayCollision(rayOrigin, rayDirection)) {
+			models[i].select();
+			collidingModels.push_back(models[i].title());
+		}
+		else models[i].deselect();
+	}
+
+	return collidingModels;
+}
+
+bool _3dModelsBuilder::intersectRayTriangle(float3 rayOrig, float3 rayDir, float3 v0, float3 v1, float3 v2)
+{
+	float epsilon = 0.0000001;
+	float3 v0v1 = v1 - v0;
+	float3 v0v2 = v2 - v0;
+	float3 pvec = CrossProduct(rayDir, v0v2);
+	float det = DotProduct(v0v1, pvec);
+	if (fabs(det) < epsilon)
+		return false;
+
+	float invDet = 1 / det;
+
+	float3 tvec = rayOrig - v0;
+	float u = DotProduct(tvec, pvec) * invDet;
+	if (u < 0 || u>1)
+		return false;
+
+	float3 qvec = CrossProduct(tvec, v0v1);
+	float v = DotProduct(rayDir, qvec) * invDet;
+	if (v < 0 || u + v >1)
+		return false;
+
+	float t = DotProduct(v0v2, qvec) * invDet;
+	return true;
+}
+
+_3dModelsBuilder::Axis::Axis(float3 pos, float length)
+{
+	position = pos;
+	len = length;
+	vertices.resize(9);
+	vertices[0].pos = pos;
+	vertices[6].pos = pos;
+	vertices[7].pos = pos;
+	vertices[8].pos = pos;
+
+	vertices[6].pos.x -= 0.005;
+	vertices[7].pos.x += 0.005;
+	vertices[8].pos.z -= 0.005;
+	vertices[0].pos.z += 0.005;
+
+
+	vertices[1].pos = pos;
+	vertices[1].pos.y = pos.y + length;
+	vertices[2].pos = pos;
+	vertices[2].pos.y = pos.y + length;
+	vertices[3].pos = vertices[2].pos;
+	vertices[4].pos = vertices[2].pos;
+	vertices[5].pos = vertices[2].pos;
+	
+	vertices[2].pos.y -= 0.06;
+	vertices[3].pos.y -= 0.06;
+	vertices[4].pos.y -= 0.06;
+	vertices[5].pos.y -= 0.06;
+
+	vertices[2].pos.x -= 0.02;
+	vertices[3].pos.x += 0.02;
+	vertices[4].pos.z -= 0.02;
+	vertices[5].pos.z += 0.02;
+	indices = {
+		1, 4, 2,
+		1, 2, 5,
+		1, 5, 3,
+		1, 3, 4,
+		2, 3, 5,
+		3, 4, 2,
+
+		1, 8, 6,
+		1, 6, 0,
+		1, 0, 7,
+		1, 7, 8,
+		6, 7, 0,
+		7, 8, 6,
+
+	};
+};

@@ -8,6 +8,14 @@
 // Renders Direct2D and 3D content on the screen.
 namespace _3dModelsBuilder
 {
+	using float3 = DirectX::XMFLOAT3;
+	using float2 = DirectX::XMFLOAT2;
+	using float4 = DirectX::XMFLOAT4;
+
+	template<class T>
+	using ComPtr = Microsoft::WRL::ComPtr<T>;
+
+
 	class _3dModelsBuilderMain : public DX::IDeviceNotify
 	{
 	public:
@@ -15,7 +23,10 @@ namespace _3dModelsBuilder
 		~_3dModelsBuilderMain();
 		void CreateWindowSizeDependentResources();
 		void StartTracking() { m_sceneRenderer->StartTracking(); }
-		void TrackingUpdate(float positionX) { m_pointerLocationX = positionX; }
+		void StartPointerMove() { m_sceneRenderer->StartPointerMove(); }
+		void StopPointerMove() { m_sceneRenderer->StopPointerMove(); }
+		bool IsPointerMove() { return m_sceneRenderer->IsPointerMove(); }
+		void TrackingUpdate(float2 prevPos, float2 curPos) { curMousePos = curPos; prevMousePos = prevPos; }
 		void StopTracking() { m_sceneRenderer->StopTracking(); }
 		bool IsTracking() { return m_sceneRenderer->IsTracking(); }
 		void StartRenderLoop();
@@ -26,6 +37,15 @@ namespace _3dModelsBuilder
 		virtual void OnDeviceLost();
 		virtual void OnDeviceRestored();
 
+		//add shapes
+		void addCube(UINT title, float3 startPos, float sideLen, float3 rotation, float3 color);
+		void addTetrahedron(UINT title, float3 startPos, float sideLen, float3 rotation, float3 color);
+
+		//ray cast mouse position
+		std::vector<UINT> rayCasting(float x, float y);
+
+		//parse
+		bool parseModelFile(std::string filename);
 	private:
 		void ProcessInput();
 		void Update();
@@ -45,6 +65,8 @@ namespace _3dModelsBuilder
 		DX::StepTimer m_timer;
 
 		// Track current input pointer position.
-		float m_pointerLocationX;
+		float2 prevMousePos;
+		float2 curMousePos;
+
 	};
 }
