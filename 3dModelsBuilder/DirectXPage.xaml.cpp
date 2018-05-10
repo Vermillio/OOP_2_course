@@ -100,9 +100,6 @@ DirectXPage::~DirectXPage()
 	m_coreInput->Dispatcher->StopProcessEvents();
 }
 
-void _3dModelsBuilder::DirectXPage::OnXMoveSliderClick()
-{
-}
 
 // Saves the current state of the app for suspend and terminate events.
 void DirectXPage::SaveInternalState(IPropertySet^ state)
@@ -241,15 +238,85 @@ void DirectXPage::OnSwapChainPanelSizeChanged(Object^ sender, SizeChangedEventAr
 }
 
 
-void _3dModelsBuilder::DirectXPage::XMoveSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e)
+void _3dModelsBuilder::DirectXPage::XMoveSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
 {
+//	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	if (slidersTracking)
+		m_main->moveX(XMoveSlider->Value);
+//	prevPointerPos = curPointerPos;
+}
 
+void _3dModelsBuilder::DirectXPage::YMoveSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
+{
+//	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	if (slidersTracking)
+		m_main->moveY(YMoveSlider->Value);
+//	prevPointerPos = curPointerPos;
+}
+
+void _3dModelsBuilder::DirectXPage::ZMoveSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
+{
+//	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	if (slidersTracking)
+		m_main->moveZ(ZMoveSlider->Value);
+//	prevPointerPos = curPointerPos;
+}
+void _3dModelsBuilder::DirectXPage::XRotateSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
+{
+//	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	if (slidersTracking)
+		m_main->rotateX(XRotateSlider->Value/360*XM_PI);
+//	prevPointerPos = curPointerPos;
+}
+void _3dModelsBuilder::DirectXPage::YRotateSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
+{
+//	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	if (slidersTracking)
+		m_main->rotateY(YRotateSlider->Value/360*XM_PI);
+//	prevPointerPos = curPointerPos;
+}
+void _3dModelsBuilder::DirectXPage::ZRotateSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
+{
+//	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	if (slidersTracking)
+		m_main->rotateZ(ZRotateSlider->Value/360*XM_PI);
+//	prevPointerPos = curPointerPos;
+}
+void _3dModelsBuilder::DirectXPage::ScaleSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
+{
+//	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	if (slidersTracking)
+		m_main->scale(ScaleSlider->Value);
+//	prevPointerPos = curPointerPos;
+}
+void _3dModelsBuilder::DirectXPage::RedSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
+{
+//	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	if (slidersTracking)
+		m_main->setRed(RedSlider->Value/RedSlider->Maximum);
+//	prevPointerPos = curPointerPos;
+}
+void _3dModelsBuilder::DirectXPage::GreenSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
+{
+//	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	if (slidersTracking)
+		m_main->setGreen(GreenSlider->Value / GreenSlider->Maximum);
+//	prevPointerPos = curPointerPos;
+}
+void _3dModelsBuilder::DirectXPage::BlueSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
+{
+//	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	if (slidersTracking)
+		m_main->setBlue(BlueSlider->Value / BlueSlider->Maximum);
+//	prevPointerPos = curPointerPos;
 }
 
 
 void _3dModelsBuilder::DirectXPage::AddModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	showModelOptions();
+
+	slidersTracking = false;
 
 	//show model configuration dialog
 }
@@ -270,9 +337,9 @@ void _3dModelsBuilder::DirectXPage::OkButton_Click(Platform::Object^ sender, Win
 	rotation.z = DirectX::XMConvertToRadians(ZRotateSlider->Value);
 
 	float3 color;
-	color.x = RedSlider->Value/255.0f;
-	color.y = GreenSlider->Value / 255.0f;
-	color.z = BlueSlider->Value / 255.0f;
+	color.x = RedSlider->Value/RedSlider->Maximum;
+	color.y = GreenSlider->Value / RedSlider->Maximum;
+	color.z = BlueSlider->Value / RedSlider->Maximum;
 
 	if (ModelTypeSwitch->IsOn)
 		addTetrahedron(defaultTetrahedronName+std::to_string(modelTitles.size()), startPoint, sideLen, rotation, color);
@@ -318,6 +385,7 @@ void _3dModelsBuilder::DirectXPage::addTetrahedron(const std::string title, floa
 void _3dModelsBuilder::DirectXPage::CancelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	hideModelOptions();
+	slidersTracking = true;
 }
 
 void _3dModelsBuilder::DirectXPage::swapChainPanel_RightTapped(Platform::Object ^ sender, Windows::UI::Xaml::Input::RightTappedRoutedEventArgs ^ e)
@@ -326,21 +394,33 @@ void _3dModelsBuilder::DirectXPage::swapChainPanel_RightTapped(Platform::Object 
 		//ShowAttachedFlyout(sender);
 }
 
-
-
-void _3dModelsBuilder::DirectXPage::MenuFlyoutItem_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+void _3dModelsBuilder::DirectXPage::MenuFlyoutItemX_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
-	action = 0;
+	if (m_main->changeStateOrthoProjectionX())
+		ItemX->Text = "hide axis X";
+	else ItemX->Text = "show axis X";
 }
 
 
-void _3dModelsBuilder::DirectXPage::MenuFlyoutItem_Click_1(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+void _3dModelsBuilder::DirectXPage::MenuFlyoutItemY_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
-	action = 1;
+	if (m_main->changeStateOrthoProjectionY())
+		ItemY->Text = "hide axis Y";
+	else ItemY->Text = "show axis Y";
 }
 
 
-void _3dModelsBuilder::DirectXPage::MenuFlyoutItem_Click_2(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+void _3dModelsBuilder::DirectXPage::MenuFlyoutItemZ_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
-	action = 2;
+	if (m_main->changeStateOrthoProjectionZ())
+		ItemZ->Text = "hide axis Z";
+	else ItemZ->Text = "show axis Z";
+}
+
+
+void _3dModelsBuilder::DirectXPage::OrthoProjButton_Click(Platform::Object^ sender, Windows::UI::Core::PointerEventArgs^ e)
+{
+//	float2 curMousePos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+//	Windows::UI::Xaml::FrameworkElement^ placementTarget;
+	OrthoProjButton->ContextFlyout->ShowAt((FrameworkElement^)sender);
 }

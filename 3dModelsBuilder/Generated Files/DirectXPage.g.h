@@ -12,12 +12,13 @@ namespace Windows {
         namespace Xaml {
             namespace Controls {
                 ref class SwapChainPanel;
+                ref class Button;
+                ref class MenuFlyoutItem;
                 ref class TextBlock;
                 ref class ListView;
-                ref class Button;
+                ref class ToggleSwitch;
                 ref class StackPanel;
                 ref class Slider;
-                ref class ToggleSwitch;
                 ref class AppBar;
             }
         }
@@ -41,9 +42,16 @@ namespace _3dModelsBuilder
     
     
         private: ::Windows::UI::Xaml::Controls::SwapChainPanel^ swapChainPanel;
+        private: ::Windows::UI::Xaml::Controls::Button^ OrthoProjButton;
+        private: ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ ItemX;
+        private: ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ ItemY;
+        private: ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ ItemZ;
         private: ::Windows::UI::Xaml::Controls::TextBlock^ FileName;
         private: ::Windows::UI::Xaml::Controls::ListView^ FileTree;
         private: ::Windows::UI::Xaml::Controls::Button^ AddModelButton;
+        private: ::Windows::UI::Xaml::Controls::Button^ RemoveModelButton;
+        private: ::Windows::UI::Xaml::Controls::Button^ ResetModelButton;
+        private: ::Windows::UI::Xaml::Controls::ToggleSwitch^ DrawingTypeSwitch;
         private: ::Windows::UI::Xaml::Controls::StackPanel^ AddModelOptions;
         private: ::Windows::UI::Xaml::Controls::StackPanel^ Options;
         private: ::Windows::UI::Xaml::Controls::Slider^ BlueSlider;
