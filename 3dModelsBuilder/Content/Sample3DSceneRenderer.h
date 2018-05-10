@@ -82,10 +82,6 @@ namespace _3dModelsBuilder
 		//4 - scale
 		int selectionAction=0;
 
-		float3 rotation;
-		float3 position;
-		float scaleCoeff;
-
 		std::vector<Model> axes;
 
 		bool isVertexBufferSet;
@@ -97,6 +93,10 @@ namespace _3dModelsBuilder
 		void calcNormals();
 		float3 normal(float3 v1, float3 v2, float3 v3);
 	public:
+
+		float3 rotation;
+		float3 position;
+		float scaleCoeff;
 
 		ModelViewProjectionConstantBuffer		m_constantBufferData;
 
@@ -112,9 +112,10 @@ namespace _3dModelsBuilder
 		void deselect() { _isSelected = false; selectionAction = 0; }
 
 		void updateBuffers(const std::shared_ptr<DX::DeviceResources>&deviceResources);
-		void setColorAll(float3 color);
-		void setColorVertex(float3 color, UINT pos);
-		
+		void setColor(float3 color);
+		//reset
+		void setIdentity();
+
 		//absolute
 		void rotateAbs(float3 rotation);
 		void moveAbs(float3 position);
@@ -130,6 +131,7 @@ namespace _3dModelsBuilder
 
 		void createAxes();
 		void render(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout);
+		void renderAxes(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout);
 
 		void checkAxesCollision(float3 rayOrigin, float3 rayDirection);
 
@@ -176,6 +178,28 @@ namespace _3dModelsBuilder
 
 		std::vector<UINT> rayCasting(float x, float y);
 
+
+		//orthogonal projection switch
+		bool changeStateOrthoProjectionX();
+		bool changeStateOrthoProjectionY();
+		bool changeStateOrthoProjectionZ();
+
+		//sliders
+
+		void sliderMoveX(float val);
+		void sliderMoveY(float val);
+		void sliderMoveZ(float val);
+		void sliderRotateX(float val);
+		void sliderRotateY(float val);
+		void sliderRotateZ(float val);
+		void sliderScale(float val);
+		void sliderRed(float val);
+		void sliderGreen(float val);
+		void sliderBlue(float val);
+
+		std::vector<UINT> removeSelected();
+		void resetSelected();
+
 	private:
 
 		std::vector<Model> models;
@@ -192,6 +216,12 @@ namespace _3dModelsBuilder
 		ComPtr<ID3D11VertexShader>	m_vertexShader;
 		ComPtr<ID3D11PixelShader>	m_pixelShader;
 		ComPtr<ID3D11Buffer>		m_constantBuffer;
+		ComPtr<ID3D11DepthStencilState> depthDisabledState;
+		UINT depthStateArg;
+
+		bool isXprojRendering;
+		bool isYprojRendering;
+		bool isZprojRendering;
 
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer	m_constantBufferData;
@@ -205,6 +235,8 @@ namespace _3dModelsBuilder
 		bool	m_tracking;
 
 		bool m_pointerMove;
+
+		void renderProjections();
 	};
 
 	class Axis : public Model {

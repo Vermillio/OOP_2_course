@@ -46,6 +46,26 @@ namespace _3dModelsBuilder
 
 		//parse
 		bool parseModelFile(std::string filename);
+
+		//sliders
+
+		void moveX(float val);
+		void moveY(float val);
+		void moveZ(float val);
+		void rotateX(float val);
+		void rotateY(float val);
+		void rotateZ(float val);
+		void scale(float val);
+		void setRed(float val);
+		void setGreen(float val);
+		void setBlue(float val);
+
+		std::vector<UINT> removeSelected();
+		void resetSelected();
+
+		bool changeStateOrthoProjectionX();
+		bool changeStateOrthoProjectionY();
+		bool changeStateOrthoProjectionZ();
 	private:
 		void ProcessInput();
 		void Update();

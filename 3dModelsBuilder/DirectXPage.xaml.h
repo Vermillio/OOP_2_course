@@ -28,19 +28,6 @@ namespace _3dModelsBuilder
 		DirectXPage();
 		virtual ~DirectXPage();
 
-		//clicks
-
-		void OnXMoveSliderClick();
-		//void OnYMoveSliderClick();
-		//void OnZMoveSliderClick();
-		//void OnXRotateSliderClick();
-		//void OnYRotateSliderClick();
-		//void OnZRotateSliderClick();
-		//void OnScaleSliderClick();
-		//void OnRedSliderClick();
-		//void OnGreenSliderClick();
-		//void OnBlueSliderClick();
-
 
 		void SaveInternalState(Windows::Foundation::Collections::IPropertySet^ state);
 		void LoadInternalState(Windows::Foundation::Collections::IPropertySet^ state);
@@ -62,6 +49,8 @@ namespace _3dModelsBuilder
 		bool readConfigFile();
 		bool parseModelFile(std::string filename);
 		std::string configFile = "file.cfg";
+
+
 
 		int action = 0;
 
@@ -94,7 +83,23 @@ namespace _3dModelsBuilder
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
 		std::unique_ptr<_3dModelsBuilderMain> m_main; 
 		bool m_windowVisible;
+		
+
+		bool slidersTracking=true;
+		//sliders controls
 		void XMoveSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e);
+		void YMoveSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e);
+		void ZMoveSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e);
+		void XRotateSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e);
+		void YRotateSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e);
+		void ZRotateSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e);
+		void ScaleSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e);
+		void RedSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e);
+		void GreenSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e);
+		void BlueSlider_ValueChanged(Platform::Object^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^ e);
+
+		
+		
 		void AddModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void OkButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 
@@ -103,13 +108,23 @@ namespace _3dModelsBuilder
 		void showModelOptions();
 		void hideModelOptions();
 
+		void hideRemoveButton();
+		void showRemoveButton();
+		void hideResetButton();
+		void showResetButton();
+		void showSliders();
+		void hideSliders();
+
 		void RayCasting(float x, float y);
 
 		void CancelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void swapChainPanel_RightTapped(Platform::Object^ sender, Windows::UI::Xaml::Input::RightTappedRoutedEventArgs^ e);
-		void MenuFlyoutItem_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
-		void MenuFlyoutItem_Click_1(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
-		void MenuFlyoutItem_Click_2(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void MenuFlyoutItemX_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void MenuFlyoutItemY_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void MenuFlyoutItemZ_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void OrthoProjButton_Click(Platform::Object^ sender, Windows::UI::Core::PointerEventArgs^ e);
+		void RemoveModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void ResetModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 	};
 }
 

@@ -25,9 +25,7 @@ struct PixelShaderInput
 	float4 pos : SV_POSITION;
 	float3 color : COLOR;
 	float3 normal : NORMAL;
-	float3 lightPos : LIGHTPOS;
-	float3 viewPos : VIEWPOS;
-	float3 lightColor : LIGHTCOLOR;
+	float4x4: World: WORLD;
 };
 
 // Simple shader to do vertex processing on the GPU.
@@ -45,10 +43,10 @@ PixelShaderInput main(VertexShaderInput input)
 
 	// Pass the color through without modification.
 	output.color = input.color;
-	output.normal = input.normal;
+	float4 normal = float4(input.normal, 0.0f);
+	normal = mul(input.normal, model);
+	output.normal = normalize(mul(normal, view).xyz);
 
-	output.lightPos=lightPos;
-	output.viewPos=viewPos;
-	output.lightColor=lightColor;
+	output.World = model;
 	return output;
 }

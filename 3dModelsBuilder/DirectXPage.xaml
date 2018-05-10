@@ -28,15 +28,16 @@
                 <TextBlock x:Name="FileName" Text="current file name" TextWrapping="Wrap" HorizontalAlignment="Center" FontSize="20" Margin="0,10,0,0"/>
                 <ListView x:Name="FileTree" Background="{ThemeResource AppBarBackgroundThemeBrush}" Margin="10,10,10,10" MinHeight="100"/>
                 <Button x:Name="AddModelButton" Content="Add" HorizontalAlignment="Center" Margin="0,10,0,0" VerticalAlignment="Top" Click="AddModelButton_Click" MinWidth="150"/>
-                <Button x:Name="RemoveModelButton" Content="Remove" HorizontalAlignment="Center" Margin="75,10,75,0" VerticalAlignment="Top" Click="AddModelButton_Click" MinWidth="150"/>
-                <Button x:Name="ResetModelButton" Content="Reset" HorizontalAlignment="Center" Margin="75,10,75,0" VerticalAlignment="Top" Click="AddModelButton_Click" MinWidth="150"/>
+                <Button x:Name="RemoveModelButton" Content="Remove" Click="RemoveModelButton_Click" HorizontalAlignment="Center" Margin="75,10,75,0" VerticalAlignment="Top" MinWidth="150"/>
+                <Button x:Name="ResetModelButton" Content="Reset" Click="ResetModelButton_Click" HorizontalAlignment="Center" Margin="75,10,75,0" VerticalAlignment="Top" MinWidth="150" Visibility="Collapsed"/>
+                <ToggleSwitch x:Name="DrawingTypeSwitch" Header="Drawing type" HorizontalAlignment="Center" OffContent="Solid" OnContent="Wireframe" VerticalAlignment="Stretch" Padding="0,0,0,0" Margin="0,10,0,0" ScrollViewer.VerticalScrollBarVisibility="Visible" Visibility="Visible"/>
                 <StackPanel x:Name="AddModelOptions" Margin="0,10,0,0" Visibility="Collapsed">
                     <TextBlock Text="Configure parameters of model below" TextWrapping="Wrap" HorizontalAlignment="Center" Margin="0,0,0,0"/>
                     <Grid Margin="0,10,0,0">
                         <Button x:Name="OkButton" Content="OK" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" MinWidth="130" Click="OkButton_Click"/>
                         <Button x:Name="CancelButton" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Top" MinWidth="130" Click="CancelButton_Click"/>
                     </Grid>
-                    <ToggleSwitch x:Name="ModelTypeSwitch" Header="Model type" HorizontalAlignment="Center" OffContent="Cube" OnContent="Tetrahedron" VerticalAlignment="Stretch" MinWidth="80" Padding="0,0,0,0" Margin="112,10,52,0" ScrollViewer.VerticalScrollBarVisibility="Visible" Visibility="Visible"/>
+                    <ToggleSwitch x:Name="ModelTypeSwitch" Header="Model type" HorizontalAlignment="Center" OffContent="Cube" OnContent="Tetrahedron" VerticalAlignment="Stretch" Padding="0,0,0,0" Margin="0,10,0,0" ScrollViewer.VerticalScrollBarVisibility="Visible" Visibility="Visible"/>
                 </StackPanel>
                 <StackPanel x:Name="Options" Visibility="Collapsed">
                     <TextBlock Text="Move" HorizontalAlignment="Center" Margin="131,0,131,0"/>
@@ -75,12 +76,12 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
                         <TextBlock  Text="x" Margin="30,0,0,0" FontSize="15" UseLayoutRounding="False" VerticalAlignment="Center"/>
                         <Slider x:Name="ScaleSlider" ValueChanged="ScaleSlider_ValueChanged" HorizontalAlignment="Right" StepFrequency="0.001" Minimum="0" Maximum="1" MinWidth="150" Margin="30,0,50,0" VerticalAlignment="Center"/>
-                       c <TextBlock x:Name="ScaleText" Text="" Margin="0,0,20,0" FontSize="15" UseLayoutRounding="False" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ScaleText" Text="" Margin="0,0,20,0" FontSize="15" UseLayoutRounding="False" VerticalAlignment="Center"/>
                     </StackPanel>
                     <TextBlock Text="Color" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="132,0,132,0"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
                         <TextBlock  Text="r" Margin="30,0,0,0" FontSize="15" UseLayoutRounding="False" VerticalAlignment="Center"/>
-                        <Slider x:Name="RedSlider" HorizontalAlignment="Right" StepFrequency="1" Minimum="0" Maximum="255" MinWidth="150" Margin="30,0,50,0" VerticalAlignment="Center">
+                        <Slider x:Name="RedSlider" ValueChanged="RedSlider_ValueChanged" HorizontalAlignment="Right" StepFrequency="1" Minimum="0" Maximum="255" MinWidth="150" Margin="30,0,50,0" VerticalAlignment="Center">
                             <Slider.Background>
                                 <LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
                                     <GradientStop Color="Black"/>
@@ -92,7 +93,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
                         <TextBlock  Text="g" Margin="30,0,0,0" FontSize="15" UseLayoutRounding="False" VerticalAlignment="Center"/>
-                        <Slider x:Name="GreenSlider" HorizontalAlignment="Right" StepFrequency="1" Minimum="0" Maximum="255" MinWidth="150" Margin="30,0,50,0" VerticalAlignment="Center">
+                        <Slider x:Name="GreenSlider" ValueChanged="GreenSlider_ValueChanged"  HorizontalAlignment="Right" StepFrequency="1" Minimum="0" Maximum="255" MinWidth="150" Margin="30,0,50,0" VerticalAlignment="Center">
                             <Slider.Background>
                                 <LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
                                     <GradientStop Color="Black"/>
@@ -104,7 +105,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
                         <TextBlock  Text="b" Margin="30,0,0,0" FontSize="15" UseLayoutRounding="False" VerticalAlignment="Center"/>
-                        <Slider x:Name="BlueSlider" HorizontalAlignment="Right" StepFrequency="1" Minimum="0" Maximum="255" MinWidth="150" Margin="30,0,50,0" VerticalAlignment="Center">
+                        <Slider x:Name="BlueSlider" ValueChanged="BlueSlider_ValueChanged" HorizontalAlignment="Right" StepFrequency="1" Minimum="0" Maximum="255" MinWidth="150" Margin="30,0,50,0" VerticalAlignment="Center">
                             <Slider.Background>
                                 <LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
                                     <GradientStop Color="Black" Offset="0"/>

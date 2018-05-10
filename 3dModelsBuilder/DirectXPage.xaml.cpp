@@ -265,21 +265,21 @@ void _3dModelsBuilder::DirectXPage::XRotateSlider_ValueChanged(Platform::Object 
 {
 //	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
 	if (slidersTracking)
-		m_main->rotateX(XRotateSlider->Value/360*XM_PI);
+		m_main->rotateX(XRotateSlider->Value/360*DirectX::XM_PI);
 //	prevPointerPos = curPointerPos;
 }
 void _3dModelsBuilder::DirectXPage::YRotateSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
 {
 //	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
 	if (slidersTracking)
-		m_main->rotateY(YRotateSlider->Value/360*XM_PI);
+		m_main->rotateY(YRotateSlider->Value/360*DirectX::XM_PI);
 //	prevPointerPos = curPointerPos;
 }
 void _3dModelsBuilder::DirectXPage::ZRotateSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
 {
 //	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
 	if (slidersTracking)
-		m_main->rotateZ(ZRotateSlider->Value/360*XM_PI);
+		m_main->rotateZ(ZRotateSlider->Value/360*DirectX::XM_PI);
 //	prevPointerPos = curPointerPos;
 }
 void _3dModelsBuilder::DirectXPage::ScaleSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
@@ -366,6 +366,14 @@ void _3dModelsBuilder::DirectXPage::hideModelOptions()
 void _3dModelsBuilder::DirectXPage::RayCasting(float x, float y)
 {
 	std::vector<UINT> titlesSelected = m_main->rayCasting(x, y);
+	if (titlesSelected.size() != 0) {
+		showSliders();
+		showResetButton();
+	}
+	else {
+		hideSliders();
+		hideResetButton();
+	}
 }
 
 void _3dModelsBuilder::DirectXPage::addCube(const std::string title, float3 startPos, float sideLen, float3 rotation, float3 color)
@@ -423,4 +431,16 @@ void _3dModelsBuilder::DirectXPage::OrthoProjButton_Click(Platform::Object^ send
 //	float2 curMousePos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
 //	Windows::UI::Xaml::FrameworkElement^ placementTarget;
 	OrthoProjButton->ContextFlyout->ShowAt((FrameworkElement^)sender);
+}
+
+
+void _3dModelsBuilder::DirectXPage::RemoveModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	m_main->RemoveSelected();
+}
+
+
+void _3dModelsBuilder::DirectXPage::ResetModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	m_main->ResetSelected();
 }

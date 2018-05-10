@@ -91,6 +91,60 @@ bool _3dModelsBuilder::_3dModelsBuilderMain::parseModelFile(std::string filename
 	return m_sceneRenderer->parseModelFile(filename);
 }
 
+bool _3dModelsBuilder::_3dModelsBuilderMain::changeStateOrthoProjectionX()
+{
+	return m_sceneRenderer->changeStateOrthoProjectionX();
+}
+bool _3dModelsBuilder::_3dModelsBuilderMain::changeStateOrthoProjectionY()
+{
+	return m_sceneRenderer->changeStateOrthoProjectionY();
+}
+bool _3dModelsBuilder::_3dModelsBuilderMain::changeStateOrthoProjectionZ()
+{
+	return m_sceneRenderer->changeStateOrthoProjectionZ();
+}
+
+void _3dModelsBuilder::_3dModelsBuilderMain::moveX(float val) {
+	m_sceneRenderer->sliderMoveX(val);
+};
+void _3dModelsBuilder::_3dModelsBuilderMain::moveY(float val) {
+	m_sceneRenderer->sliderMoveY(val);
+};
+void _3dModelsBuilder::_3dModelsBuilderMain::moveZ(float val) {
+	m_sceneRenderer->sliderMoveZ(val);
+};
+void _3dModelsBuilder::_3dModelsBuilderMain::rotateX(float val) {
+	m_sceneRenderer->sliderRotateX(val);
+};
+void _3dModelsBuilder::_3dModelsBuilderMain::rotateY(float val) {
+	m_sceneRenderer->sliderRotateY(val);
+};
+void _3dModelsBuilder::_3dModelsBuilderMain::rotateZ(float val) {
+	m_sceneRenderer->sliderRotateZ(val);
+};
+void _3dModelsBuilder::_3dModelsBuilderMain::scale(float val) {
+	m_sceneRenderer->sliderScale(val);
+};
+void _3dModelsBuilder::_3dModelsBuilderMain::setRed(float val) {
+	m_sceneRenderer->sliderRed(val);
+};
+void _3dModelsBuilder::_3dModelsBuilderMain::setGreen(float val) {
+	m_sceneRenderer->sliderGreen(val);
+};
+void _3dModelsBuilder::_3dModelsBuilderMain::setBlue(float val) {
+	m_sceneRenderer->sliderBlue(val);
+}
+std::vector<UINT> _3dModelsBuilder::_3dModelsBuilderMain::removeSelected()
+{
+	return m_sceneRenderer->removeSelected();
+}
+void _3dModelsBuilder::_3dModelsBuilderMain::resetSelected()
+{
+	m_sceneRenderer->resetSelected();
+}
+;
+
+
 // Process all input from the user before updating game state
 void _3dModelsBuilderMain::ProcessInput()
 {
