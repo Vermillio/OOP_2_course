@@ -130,8 +130,8 @@ namespace _3dModelsBuilder
 		bool checkRayCollision(const float3 &rayOrigin, const float3 &rayDirection);
 
 		void createAxes();
-		void render(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout);
-		void renderAxes(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout);
+		void render(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode);
+		void renderAxes(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode);
 
 		void checkAxesCollision(float3 rayOrigin, float3 rayDirection);
 
@@ -197,8 +197,14 @@ namespace _3dModelsBuilder
 		void sliderGreen(float val);
 		void sliderBlue(float val);
 
-		std::vector<UINT> removeSelected();
-		void resetSelected();
+		std::vector<UINT> RemoveSelected();
+		void ResetSelected();
+
+		D3D11_PRIMITIVE_TOPOLOGY drawingMode;
+
+		//drawing mode
+		void setWireframeMode();
+		void setSolidMode();
 
 	private:
 

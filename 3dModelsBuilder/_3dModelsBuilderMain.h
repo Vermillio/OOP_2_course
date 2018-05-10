@@ -60,9 +60,15 @@ namespace _3dModelsBuilder
 		void setGreen(float val);
 		void setBlue(float val);
 
-		std::vector<UINT> removeSelected();
-		void resetSelected();
+		std::vector<UINT> RemoveSelected();
+		void ResetSelected();
 
+
+		//drawing mode
+		void setWireframeMode();
+		void setSolidMode();
+
+		//projections
 		bool changeStateOrthoProjectionX();
 		bool changeStateOrthoProjectionY();
 		bool changeStateOrthoProjectionZ();

@@ -30,7 +30,7 @@
                 <Button x:Name="AddModelButton" Content="Add" HorizontalAlignment="Center" Margin="0,10,0,0" VerticalAlignment="Top" Click="AddModelButton_Click" MinWidth="150"/>
                 <Button x:Name="RemoveModelButton" Content="Remove" Click="RemoveModelButton_Click" HorizontalAlignment="Center" Margin="75,10,75,0" VerticalAlignment="Top" MinWidth="150"/>
                 <Button x:Name="ResetModelButton" Content="Reset" Click="ResetModelButton_Click" HorizontalAlignment="Center" Margin="75,10,75,0" VerticalAlignment="Top" MinWidth="150" Visibility="Collapsed"/>
-                <ToggleSwitch x:Name="DrawingTypeSwitch" Header="Drawing type" HorizontalAlignment="Center" OffContent="Solid" OnContent="Wireframe" VerticalAlignment="Stretch" Padding="0,0,0,0" Margin="0,10,0,0" ScrollViewer.VerticalScrollBarVisibility="Visible" Visibility="Visible"/>
+                <ToggleSwitch x:Name="DrawingTypeSwitch" Toggled="DrawingTypeSwitch_Toggled" Header="Drawing mode" HorizontalAlignment="Center" OffContent="Solid" OnContent="Wireframe" VerticalAlignment="Stretch" Padding="0,0,0,0" Margin="0,10,0,0" ScrollViewer.VerticalScrollBarVisibility="Visible" Visibility="Visible"/>
                 <StackPanel x:Name="AddModelOptions" Margin="0,10,0,0" Visibility="Collapsed">
                     <TextBlock Text="Configure parameters of model below" TextWrapping="Wrap" HorizontalAlignment="Center" Margin="0,0,0,0"/>
                     <Grid Margin="0,10,0,0">

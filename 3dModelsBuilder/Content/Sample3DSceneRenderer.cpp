@@ -20,7 +20,8 @@ Sample3DSceneRenderer::Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceRes
 	isIndexBufferSet(false),
 	isXprojRendering(false),
     isYprojRendering(false),
-    isZprojRendering(false)
+    isZprojRendering(false),
+	drawingMode(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST)
 {
 	CreateWindowSizeDependentResources();
 	CreateDeviceDependentResources();
@@ -154,13 +155,13 @@ void Sample3DSceneRenderer::Render()
 	renderProjections();
 
 	for (size_t i = 0; i < models.size(); ++i)
-		models[i].renderAxes(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout);
+		models[i].renderAxes(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);
 
 	////always on top disable
 	//context->OMSetDepthStencilState(curState, curStateArg);
 
 	for (size_t i = 0; i < models.size(); ++i)
-		models[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout);
+		models[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources()
@@ -225,6 +226,36 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		);
 		int in = 0;
 	});
+	auto createDepthStates = createPSTask.then([this]() {
+		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+
+		depthStencilDesc.DepthEnable = TRUE;
+		depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+		depthStencilDesc.StencilEnable = FALSE;
+		depthStencilDesc.StencilReadMask = 0xFF;
+		depthStencilDesc.StencilWriteMask = 0xFF;
+
+		// Stencil operations if pixel is front-facing
+		depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+		depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+		//// Stencil operations if pixel is back-facing
+		//depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		//depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+		//depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		//depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+		m_deviceResources->GetD3DDevice()->CreateDepthStencilState(&depthStencilDesc, &depthDisabledState);
+
+	});
+
+	// Once the cube is loaded, the object is ready to be rendered.
+	createDepthStates.then([this]() {
+		m_loadingComplete = true;
+	});
 
 
 }
@@ -259,80 +290,45 @@ void Cube::create(const float3 &startPoint, float sideLen)
 	
 	// position color
 	vertices = {
-	{ float3(Ax, Ay, Az), float3(0.0f, 0.0f, 0.0f), float3() },
-	{ float3(Ax,  By, Az), float3(0.0f, 1.0f, 0.0f), float3() },
-	{ float3(Ax, Ay, Bz), float3(0.0f, 0.0f, 1.0f), float3() },
-	{ float3(Ax,  By,  Bz), float3(0.0f, 1.0f, 1.0f), float3() },
-
-	{ float3(Bx,  Ay, Az), float3(1.0f, 1.0f, 0.0f), float3() },
-	{ float3(Bx,  Ay,  Bz), float3(1.0f, 1.0f, 1.0f), float3() },
-	{ float3(Bx, By,  Az), float3(1.0f, 0.0f, 1.0f), float3() },
-	{ float3(Bx, By, Bz), float3(1.0f, 0.0f, 0.0f), float3() },
-
-
-	{ float3(Ax, Ay, Az), float3(0.0f, 0.0f, 0.0f), float3() },
-	{ float3(Ax,  Ay, Bz), float3(0.0f, 1.0f, 0.0f), float3() },
-	{ float3(Bx,  Ay, Bz), float3(1.0f, 1.0f, 0.0f), float3() },
-	{ float3(Bx, Ay, Az), float3(1.0f, 0.0f, 0.0f), float3() },
-
-	{ float3(Ax,  By, Az), float3(0.0f, 1.0f, 0.0f), float3() },
-	{ float3(Bx,  By, Az), float3(1.0f, 1.0f, 0.0f), float3() },
-	{ float3(Bx,  By,  Bz), float3(1.0f, 1.0f, 1.0f), float3() },
-	{ float3(Ax,  By,  Bz), float3(0.0f, 1.0f, 1.0f), float3() },
-
-	{ float3(Ax, Ay, Az), float3(0.0f, 0.0f, 0.0f), float3() },
-	{ float3(Bx, Ay, Az), float3(1.0f, 0.0f, 0.0f), float3() },
-	{ float3(Bx, By,  Az), float3(1.0f, 0.0f, 1.0f), float3() },
-	{ float3(Ax, By, Az), float3(0.0f, 0.0f, 1.0f), float3() },
-
-
-	{ float3(Ax, Ay, Bz), float3(0.0f, 0.0f, 1.0f), float3() },
-	{ float3(Ax,  By,  Bz), float3(0.0f, 1.0f, 1.0f), float3() },
-	{ float3(Bx,  By,  Bz), float3(1.0f, 1.0f, 1.0f), float3() },
-	{ float3(Bx, Ay,  Bz), float3(1.0f, 0.0f, 1.0f), float3() },
-
+		{float3(Ax, Ay, Bz),  float3(0,0,0), float3(0, 0, 1)},
+		{float3(Bx, Ay, Bz),  float3(0,0,0), float3(0, 0, 1)},
+		{float3(Ax, By, Bz),  float3(0,0,0), float3(0, 0, 1)},
+		{float3(Bx, By, Bz),  float3(0,0,0), float3(0, 0, 1)},
+		{float3(Ax, By, Bz),  float3(0,0,0), float3(0, 1, 0)},
+		{float3(Bx, By, Bz),  float3(0,0,0), float3(0, 1, 0)},
+		{float3(Ax, By, Az),  float3(0,0,0), float3(0, 1, 0)},
+		{float3(Bx, By, Az),  float3(0,0,0), float3(0, 1, 0)},
+		{float3(Ax, By, Az),  float3(0,0,0), float3(0, 0, -1)},
+		{float3(Bx, By, Az),  float3(0,0,0), float3(0, 0, -1)},
+		{float3(Ax, Ay, Az),  float3(0,0,0), float3(0, 0, -1)},
+		{float3(Bx, Ay, Az),  float3(0,0,0), float3(0, 0, -1)},
+		{float3(Ax, Ay, Az),  float3(0,0,0), float3(0, -1, 0)},
+		{float3(Bx, Ay, Az),  float3(0,0,0), float3(0, -1, 0)},
+		{float3(Ax, Ay, Bz),  float3(0,0,0), float3(0, -1, 0)},
+		{float3(Bx, Ay, Bz),  float3(0,0,0), float3(0, -1, 0)},
+		{float3(Bx, Ay, Bz),  float3(0,0,0), float3(1, 0, 0)},
+		{float3(Bx, Ay, Az),  float3(0,0,0), float3(1, 0, 0)},
+		{float3(Bx, By, Bz),  float3(0,0,0), float3(1, 0, 0)},
+		{float3(Bx, By, Az),  float3(0,0,0), float3(1, 0, 0)},
+		{float3(Ax, Ay, Az),  float3(0,0,0), float3(-1, 0, 0)},
+		{float3(Ax, Ay, Bz),  float3(0,0,0), float3(-1, 0, 0)},
+		{float3(Ax, By, Az),  float3(0,0,0), float3(-1, 0, 0)},
+		{float3(Ax, By, Bz),  float3(0,0,0), float3(-1, 0, 0)},
 	};
-
-	// triangles
 	indices = {
-		0,1,2, // -x
-		2,1,3,
+				1,  0, 2,
+				1,  2, 3,
+				5,  4, 6,
+				5,  6, 7,
+				9,  8, 10,
+				9, 10,11,
+				13,12, 14,
+				13,14, 15,
+				17,16, 18,
+				17,18, 19,
+				21,20, 22,
+				21,22, 23 };
 
-		4,5,6, // +x
-		5,7,6,
-
-		8,9,10, // -y
-		8,10,11,
-
-		12,13,14, // +y
-		12,14,15,
-
-		16,17,18, // -z
-		16,18,19,
-
-		20,21,22, // +z
-		20,22,23,
-
-		2,1,0, // -x
-		3,1,2,
-
-		6,5,4, // +x
-		6,7,4,
-
-		10,9,8, // -y
-		11,10,8,
-
-		14,13,12, // +y
-		15,14,12,
-
-		18,17,16, // -z
-		19,18,16,
-
-		22,21,20, // +z
-		23,22,20
-	};
-
-	calcNormals();
 	position = startPoint;
 	scaleCoeff = 1;
 }
@@ -346,9 +342,9 @@ Tetrahedron::Tetrahedron(UINT title, const float3 &startPoint, float sideLen)
 void Tetrahedron::create(const float3 &startPoint, float sideLen)
 {
 	float3 A = float3(startPoint.x, startPoint.y + sideLen / sqrt(3), startPoint.z);
-	float3 B = float3(startPoint.x + sideLen / 2, startPoint.y - sqrt(6)*sideLen / 3, startPoint.z - sqrt(6)*sideLen / 3);
-	float3 C = float3(startPoint.x - sideLen / 2, startPoint.y - sqrt(6)*sideLen / 3, startPoint.z - sqrt(6)*sideLen / 3);
-	float3 D = float3(startPoint.x, startPoint.y - sqrt(6)*sideLen / 3, startPoint.z + sideLen / sqrt(3));
+	float3 B = float3(startPoint.x + sideLen / 2, startPoint.y - sqrt(3)*sideLen / 6, startPoint.z - sqrt(3)*sideLen / 6);
+	float3 C = float3(startPoint.x - sideLen / 2, startPoint.y - sqrt(3)*sideLen / 6, startPoint.z - sqrt(3)*sideLen / 6);
+	float3 D = float3(startPoint.x, startPoint.y - sqrt(3)*sideLen / 6, startPoint.z + sideLen / sqrt(3));
 	//position color
 	vertices = {
 	{ A, float3(0.0f, 0.0f, 0.0f), float3() },
@@ -369,14 +365,10 @@ void Tetrahedron::create(const float3 &startPoint, float sideLen)
 	};
 	//triangles
 	indices = {
-		0,1,2,
 		2,1,0,
 		3,4,5,
-		5,4,3,
-		6,7,8,
 		8,7,6,
-		9,10,11,
-		11,10,9,
+		9,10, 11,
 	};
 
 	position = startPoint;
@@ -572,7 +564,7 @@ void _3dModelsBuilder::Model::rotate(float3 rotation){
 	XMMATRIX current = XMLoadFloat4x4(&m_constantBufferData.model);
 	current = XMMatrixMultiply(
 		XMMatrixMultiply(
-		XMMatrixMultiply(XMMatrixRotationX(rotation.x),
+		XMMatrixMultiply(XMMatrixTranspose(XMMatrixRotationX(rotation.x)),
 			XMMatrixRotationY(rotation.y)),
 		XMMatrixTranspose(XMMatrixRotationZ(rotation.z))), current);
 	XMStoreFloat4x4(&m_constantBufferData.model, current);
@@ -628,26 +620,26 @@ void _3dModelsBuilder::Model::setConstantBuffer(const ModelViewProjectionConstan
 
 bool _3dModelsBuilder::Model::checkRayCollision(const float3 &rayOrigin, const float3 &rayDirection)
 {
-	float4 orig_ = float4(rayOrigin.x, rayOrigin.y, rayOrigin.z, 1.0f);
-	float4 dir_ = float4(rayDirection.x, rayOrigin.y, rayOrigin.z, 1.0f);
-	XMVECTOR orig = XMLoadFloat4(&orig_);
-	XMVECTOR dir = XMLoadFloat4(&dir_);
-	XMMATRIX model = XMLoadFloat4x4(&m_constantBufferData.model);
-	XMMATRIX view = XMLoadFloat4x4(&m_constantBufferData.view);
-	XMMATRIX projection = XMLoadFloat4x4(&m_constantBufferData.projection);
+//	float3 orig_ = float3(rayOrigin.x, rayOrigin.y, rayOrigin.z);
+//	float3 dir_ = float3(rayDirection.x, rayOrigin.y, rayOrigin.z);
+	XMVECTOR orig = XMLoadFloat3(&rayOrigin);
+	XMVECTOR dir = XMLoadFloat3(&rayDirection);
+//	XMMATRIX model = XMLoadFloat4x4(&m_constantBufferData.model);
+	XMMATRIX inverseviewproj = XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_constantBufferData.view) * XMLoadFloat4x4(&m_constantBufferData.projection));
 
-	orig = XMVector3Transform(XMVector3Transform(XMVector3Transform(orig, model), view), projection);
-	dir = XMVector3Transform(XMVector3Transform(XMVector3Transform(dir, model), view), projection);
+	orig = XMVector4Transform(orig, inverseviewproj);
+	dir = XMVector4Transform(orig, inverseviewproj);
 	dir = XMVector3Normalize(dir);
 
 	for (size_t i = 0; i < indices.size(); i += 3) {
-		float4 v0_= float4(vertices[indices[i]].pos.x, vertices[indices[i]].pos.y, vertices[indices[i]].pos.z, 1.0f);
-		float4 v1_ = float4(vertices[indices[i+1]].pos.x, vertices[indices[i+1]].pos.y, vertices[indices[i+1]].pos.z, 1.0f);
-		float4 v2_ = float4(vertices[indices[i+2]].pos.x, vertices[indices[i+2]].pos.y, vertices[indices[i+2]].pos.z, 1.0f);
+		float3 v0_= float3(vertices[indices[i]].pos.x, vertices[indices[i]].pos.y, vertices[indices[i]].pos.z);
+		float3 v1_ = float3(vertices[indices[i+1]].pos.x, vertices[indices[i+1]].pos.y, vertices[indices[i+1]].pos.z);
+		float3 v2_ = float3(vertices[indices[i+2]].pos.x, vertices[indices[i+2]].pos.y, vertices[indices[i+2]].pos.z);
 
-		XMVECTOR v0 = XMLoadFloat4(&v0_);
-		XMVECTOR v1 = XMLoadFloat4(&v1_);
-		XMVECTOR v2 = XMLoadFloat4(&v2_);
+		XMVECTOR v0 = XMLoadFloat3(&v0_);
+		XMVECTOR v1 = XMLoadFloat3(&v1_);
+		XMVECTOR v2 = XMLoadFloat3(&v2_);
+		
 		float dist;
 		if (DirectX::TriangleTests::Intersects(orig, dir, v0, v1,v2, dist) ||
 			DirectX::TriangleTests::Intersects(orig, dir, v2, v1, v0, dist))
@@ -677,7 +669,7 @@ void _3dModelsBuilder::Model::createAxes()
 	axes[2].setConstantBuffer(m_constantBufferData);
 }
 
-void _3dModelsBuilder::Model::render(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout)
+void _3dModelsBuilder::Model::render(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode)
 {
 	updateBuffers(m_deviceResources);
 
@@ -695,7 +687,7 @@ void _3dModelsBuilder::Model::render(std::shared_ptr<DX::DeviceResources> &m_dev
 //	if (!isSelected())
 //		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 //	else
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+	context->IASetPrimitiveTopology(drawingMode);
 	context->IASetInputLayout(m_inputLayout.Get());
 
 	// Attach our vertex shader.
@@ -730,11 +722,11 @@ void _3dModelsBuilder::Model::render(std::shared_ptr<DX::DeviceResources> &m_dev
 	);
 }
 
-void _3dModelsBuilder::Model::renderAxes(std::shared_ptr<DX::DeviceResources>& m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout)
+void _3dModelsBuilder::Model::renderAxes(std::shared_ptr<DX::DeviceResources>& m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode)
 {
 	if (isSelected())
 		for (size_t i = 0; i < axes.size(); ++i)
-			axes[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout);	
+			axes[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);	
 }
 
 void _3dModelsBuilder::Model::checkAxesCollision(float3 rayOrigin, float3 rayDirection)
@@ -756,7 +748,7 @@ void _3dModelsBuilder::Model::checkAxesCollision(float3 rayOrigin, float3 rayDir
 void _3dModelsBuilder::Model::applyAction(float2 prevMP, float2 curMP)
 {
 	if (selectionAction == 0) {
-		rotate(float3(curMP.x-prevMP.x, curMP.y-prevMP.y, 0));
+		rotate(float3(curMP.y-prevMP.y, curMP.x - prevMP.x, 0));
 	}
 	else if (selectionAction == 1) {
 		move(float3(curMP.x - prevMP.x, position.y,position.z));
@@ -774,7 +766,7 @@ std::vector<UINT> _3dModelsBuilder::Sample3DSceneRenderer::rayCasting(float x, f
 	std::vector<UINT> collidingModels;
 	float2 point = normalizeCoordinates(float2(x, y));
 	float3 rayOrigin = float3(point.x, point.y, 10.0f);
-	float3 rayDirection = float3(point.x, point.y, -1.0f);
+	float3 rayDirection = float3(0, 0, -1.0f);
 
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected()) {
@@ -861,10 +853,10 @@ _3dModelsBuilder::Axis::Axis(float3 pos, float length)
 	vertices[4].pos.z -= 0.02;
 	vertices[5].pos.z += 0.02;
 	indices = {
-		1, 4, 2,
-		1, 2, 5,
-		1, 5, 3,
-		1, 3, 4,
+		1, 2, 4,
+		1, 5, 2,
+		1, 3, 5,
+		1, 4, 3,
 		2, 3, 5,
 		3, 4, 2,
 
@@ -918,7 +910,7 @@ void _3dModelsBuilder::Sample3DSceneRenderer::sliderRotateZ(float val) {
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderScale(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected())
-			models[i].scale(float3(val, val, val));
+			models[i].scaleAbs(val);
 	}
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderRed(float val) {
@@ -939,23 +931,31 @@ void _3dModelsBuilder::Sample3DSceneRenderer::sliderBlue(float val) {
 			models[i].setColor(float3(-1, -1, val));
 	}
 }
-std::vector<UINT> _3dModelsBuilder::Sample3DSceneRenderer::removeSelected()
+std::vector<UINT> _3dModelsBuilder::Sample3DSceneRenderer::RemoveSelected()
 {
 	std::vector<UINT> titlesRemoved;
 	for (int i = models.size()-1; i >= 0; --i) {
 		if (models[i].isSelected()) {
-			titlesRemoved.push_back(models[i].title);
+			titlesRemoved.push_back(models[i].title());
 			models.erase(models.begin() + i);
 		}
 	}
 	return titlesRemoved;
 }
-void _3dModelsBuilder::Sample3DSceneRenderer::resetSelected()
+void _3dModelsBuilder::Sample3DSceneRenderer::ResetSelected()
 {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected())
 			models[i].setIdentity();
 	}
 
+}
+void _3dModelsBuilder::Sample3DSceneRenderer::setWireframeMode()
+{
+	drawingMode = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
+}
+void _3dModelsBuilder::Sample3DSceneRenderer::setSolidMode()
+{
+	drawingMode = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 }
 ;

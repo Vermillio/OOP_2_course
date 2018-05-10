@@ -25,7 +25,7 @@ struct PixelShaderInput
 	float4 pos : SV_POSITION;
 	float3 color : COLOR;
 	float3 normal : NORMAL;
-	float4x4: World: WORLD;
+	float4x4 World: WORLD;
 };
 
 // Simple shader to do vertex processing on the GPU.
@@ -43,9 +43,10 @@ PixelShaderInput main(VertexShaderInput input)
 
 	// Pass the color through without modification.
 	output.color = input.color;
+
 	float4 normal = float4(input.normal, 0.0f);
 	normal = mul(input.normal, model);
-	output.normal = normalize(mul(normal, view).xyz);
+//	output.normal = normalize(mul(normal, view).xyz);
 
 	output.World = model;
 	return output;

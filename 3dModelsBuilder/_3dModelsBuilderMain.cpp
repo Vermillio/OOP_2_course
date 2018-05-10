@@ -134,13 +134,21 @@ void _3dModelsBuilder::_3dModelsBuilderMain::setGreen(float val) {
 void _3dModelsBuilder::_3dModelsBuilderMain::setBlue(float val) {
 	m_sceneRenderer->sliderBlue(val);
 }
-std::vector<UINT> _3dModelsBuilder::_3dModelsBuilderMain::removeSelected()
+std::vector<UINT> _3dModelsBuilder::_3dModelsBuilderMain::RemoveSelected()
 {
-	return m_sceneRenderer->removeSelected();
+	return m_sceneRenderer->RemoveSelected();
 }
-void _3dModelsBuilder::_3dModelsBuilderMain::resetSelected()
+void _3dModelsBuilder::_3dModelsBuilderMain::ResetSelected()
 {
-	m_sceneRenderer->resetSelected();
+	m_sceneRenderer->ResetSelected();
+}
+void _3dModelsBuilder::_3dModelsBuilderMain::setWireframeMode()
+{
+	m_sceneRenderer->setWireframeMode();
+}
+void _3dModelsBuilder::_3dModelsBuilderMain::setSolidMode()
+{
+	m_sceneRenderer->setSolidMode();
 }
 ;
 

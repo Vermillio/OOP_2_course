@@ -125,6 +125,7 @@ namespace _3dModelsBuilder
 		void OrthoProjButton_Click(Platform::Object^ sender, Windows::UI::Core::PointerEventArgs^ e);
 		void RemoveModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void ResetModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
-	};
+		void DrawingTypeSwitch_Toggled(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+};
 }
 

@@ -265,21 +265,21 @@ void _3dModelsBuilder::DirectXPage::XRotateSlider_ValueChanged(Platform::Object 
 {
 //	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
 	if (slidersTracking)
-		m_main->rotateX(XRotateSlider->Value/360*DirectX::XM_PI);
+		m_main->rotateX(XRotateSlider->Value/180*DirectX::XM_PI);
 //	prevPointerPos = curPointerPos;
 }
 void _3dModelsBuilder::DirectXPage::YRotateSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
 {
 //	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
 	if (slidersTracking)
-		m_main->rotateY(YRotateSlider->Value/360*DirectX::XM_PI);
+		m_main->rotateY(YRotateSlider->Value/180*DirectX::XM_PI);
 //	prevPointerPos = curPointerPos;
 }
 void _3dModelsBuilder::DirectXPage::ZRotateSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
 {
 //	float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
 	if (slidersTracking)
-		m_main->rotateZ(ZRotateSlider->Value/360*DirectX::XM_PI);
+		m_main->rotateZ(ZRotateSlider->Value/180*DirectX::XM_PI);
 //	prevPointerPos = curPointerPos;
 }
 void _3dModelsBuilder::DirectXPage::ScaleSlider_ValueChanged(Platform::Object ^ sender, Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs ^ e)
@@ -315,7 +315,8 @@ void _3dModelsBuilder::DirectXPage::BlueSlider_ValueChanged(Platform::Object ^ s
 void _3dModelsBuilder::DirectXPage::AddModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	showModelOptions();
-
+	hideRemoveButton();
+	hideResetButton();
 	slidersTracking = false;
 
 	//show model configuration dialog
@@ -363,16 +364,74 @@ void _3dModelsBuilder::DirectXPage::hideModelOptions()
 	Options->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
 }
 
+void _3dModelsBuilder::DirectXPage::hideRemoveButton()
+{
+	RemoveModelButton->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		RemoveModelButton->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+	}));
+}
+
+void _3dModelsBuilder::DirectXPage::showRemoveButton()
+{
+	RemoveModelButton->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		RemoveModelButton->Visibility = Windows::UI::Xaml::Visibility::Visible;
+	}));
+}
+
+void _3dModelsBuilder::DirectXPage::hideResetButton()
+{
+	ResetModelButton->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		ResetModelButton->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+	}));
+}
+
+void _3dModelsBuilder::DirectXPage::showResetButton()
+{
+	ResetModelButton->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		ResetModelButton->Visibility = Windows::UI::Xaml::Visibility::Visible;
+	}));
+}
+
+void _3dModelsBuilder::DirectXPage::showSliders()
+{
+	Options->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		Options->Visibility = Windows::UI::Xaml::Visibility::Visible;
+	}));
+}
+
+void _3dModelsBuilder::DirectXPage::hideSliders()
+{
+	Options->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		Options->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+	}));
+}
+
 void _3dModelsBuilder::DirectXPage::RayCasting(float x, float y)
 {
 	std::vector<UINT> titlesSelected = m_main->rayCasting(x, y);
 	if (titlesSelected.size() != 0) {
 		showSliders();
 		showResetButton();
+		showRemoveButton();
+		slidersTracking = true;
 	}
 	else {
 		hideSliders();
 		hideResetButton();
+		hideRemoveButton();
+		slidersTracking = false;
 	}
 }
 
@@ -436,11 +495,27 @@ void _3dModelsBuilder::DirectXPage::OrthoProjButton_Click(Platform::Object^ send
 
 void _3dModelsBuilder::DirectXPage::RemoveModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
-	m_main->RemoveSelected();
+	std::vector<UINT> titlesRemoved=m_main->RemoveSelected();
+	std::sort(titlesRemoved.rbegin(), titlesRemoved.rend());
+	for (size_t i = 0; i < titlesRemoved.size(); ++i) {
+		modelTitles.erase(modelTitles.begin() + titlesRemoved[i]);
+	}
+	hideSliders();
 }
 
 
 void _3dModelsBuilder::DirectXPage::ResetModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	m_main->ResetSelected();
+}
+
+
+void _3dModelsBuilder::DirectXPage::DrawingTypeSwitch_Toggled(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	if (DrawingTypeSwitch->IsOn) {
+		m_main->setWireframeMode();
+	}
+	else {
+		m_main->setSolidMode();
+	}
 }
