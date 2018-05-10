@@ -418,6 +418,46 @@ void _3dModelsBuilder::DirectXPage::hideSliders()
 	}));
 }
 
+void _3dModelsBuilder::DirectXPage::resetSliders()
+{
+	XMoveSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		XMoveSlider->Value = 0;
+	}));
+	YMoveSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		YMoveSlider->Value = 0;
+	}));
+	ZMoveSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		ZMoveSlider->Value = 0;
+	}));
+	XRotateSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		XRotateSlider->Value = 0;
+	}));
+	YRotateSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		YRotateSlider->Value = 0;
+	}));
+	ZRotateSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		ZRotateSlider->Value = 0;
+	}));
+	ScaleSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		ScaleSlider->Value = 1;
+	}));
+
+}
+
 void _3dModelsBuilder::DirectXPage::RayCasting(float x, float y)
 {
 	std::vector<UINT> titlesSelected = m_main->rayCasting(x, y);
@@ -507,6 +547,7 @@ void _3dModelsBuilder::DirectXPage::RemoveModelButton_Click(Platform::Object^ se
 void _3dModelsBuilder::DirectXPage::ResetModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	m_main->ResetSelected();
+	resetSliders();
 }
 
 

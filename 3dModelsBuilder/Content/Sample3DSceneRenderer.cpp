@@ -144,24 +144,26 @@ void Sample3DSceneRenderer::Render()
 	if (!m_loadingComplete)
 		return;
 
-	//always on top enable
 	auto context = m_deviceResources->GetD3DDeviceContext();
-	//ID3D11DepthStencilState *curState;
-	//UINT curStateArg;
-	//context->OMGetDepthStencilState(&curState, &curStateArg);
-	//
-	//context->OMSetDepthStencilState(depthDisabledState.Get(), 0);
+
+	for (size_t i = 0; i < models.size(); ++i)
+		models[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);
+
+	//always on top enable
+	ID3D11DepthStencilState *curState;
+	UINT curStateArg;
+	context->OMGetDepthStencilState(&curState, &curStateArg);
+
+	context->OMSetDepthStencilState(depthDisabledState.Get(), 0);
 
 	renderProjections();
 
 	for (size_t i = 0; i < models.size(); ++i)
 		models[i].renderAxes(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);
 
-	////always on top disable
-	//context->OMSetDepthStencilState(curState, curStateArg);
+	//always on top disable
+	context->OMSetDepthStencilState(curState, curStateArg);
 
-	for (size_t i = 0; i < models.size(); ++i)
-		models[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources()
@@ -229,7 +231,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 	auto createDepthStates = createPSTask.then([this]() {
 		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 
-		depthStencilDesc.DepthEnable = TRUE;
+		depthStencilDesc.DepthEnable = FALSE;
 		depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 		depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
 		depthStencilDesc.StencilEnable = FALSE;
@@ -606,8 +608,6 @@ void _3dModelsBuilder::Model::scale(float k)
 
 	XMStoreFloat4x4(&m_constantBufferData.model, current);
 	this->scaleCoeff *= k;
-	for (size_t i = 0; i < axes.size(); ++i)
-		axes[i].scale(k);
 	move(tmpPos);
 }
 
@@ -829,12 +829,6 @@ _3dModelsBuilder::Axis::Axis(float3 pos, float length)
 	vertices[7].pos = pos;
 	vertices[8].pos = pos;
 
-	vertices[6].pos.x -= 0.005;
-	vertices[7].pos.x += 0.005;
-	vertices[8].pos.z -= 0.005;
-	vertices[0].pos.z += 0.005;
-
-
 	vertices[1].pos = pos;
 	vertices[1].pos.y = pos.y + length;
 	vertices[2].pos = pos;
@@ -842,16 +836,23 @@ _3dModelsBuilder::Axis::Axis(float3 pos, float length)
 	vertices[3].pos = vertices[2].pos;
 	vertices[4].pos = vertices[2].pos;
 	vertices[5].pos = vertices[2].pos;
+
+	vertices[6].pos.x -= 0.005;
+	vertices[7].pos.x += 0.005;
+	vertices[8].pos.z -= 0.005;
+	vertices[0].pos.z += 0.005;
+
+
 	
 	vertices[2].pos.y -= 0.06;
 	vertices[3].pos.y -= 0.06;
 	vertices[4].pos.y -= 0.06;
 	vertices[5].pos.y -= 0.06;
 
-	vertices[2].pos.x -= 0.02;
-	vertices[3].pos.x += 0.02;
-	vertices[4].pos.z -= 0.02;
-	vertices[5].pos.z += 0.02;
+	vertices[2].pos.x += 0.02;
+	vertices[3].pos.x -= 0.02;
+	vertices[4].pos.z += 0.02;
+	vertices[5].pos.z -= 0.02;
 	indices = {
 		1, 2, 4,
 		1, 5, 2,
@@ -866,7 +867,6 @@ _3dModelsBuilder::Axis::Axis(float3 pos, float length)
 		1, 7, 8,
 		6, 7, 0,
 		7, 8, 6,
-
 	};
 	calcNormals();
 };

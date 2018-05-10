@@ -114,6 +114,7 @@ namespace _3dModelsBuilder
 		void showResetButton();
 		void showSliders();
 		void hideSliders();
+		void resetSliders();
 
 		void RayCasting(float x, float y);
 

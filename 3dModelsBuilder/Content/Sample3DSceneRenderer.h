@@ -61,9 +61,6 @@ namespace _3dModelsBuilder
 		return float3(vec_.x, vec_.y, vec_.z);
 	}
 
-	bool intersectRayTriangle(float3 rayOrig, float3 rayDir, float3 v0, float3 v1, float3 v2);
-
-
 	class Model {
 	protected:
 
