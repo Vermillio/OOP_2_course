@@ -75,7 +75,7 @@
                     <TextBlock Text="Scale" HorizontalAlignment="Center" Margin="133,0,132,0"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
                         <TextBlock  Text="x" Margin="30,0,0,0" FontSize="15" UseLayoutRounding="False" VerticalAlignment="Center"/>
-                        <Slider x:Name="ScaleSlider" ValueChanged="ScaleSlider_ValueChanged" HorizontalAlignment="Right" StepFrequency="0.001" Minimum="0" Maximum="1" MinWidth="150" Margin="30,0,50,0" VerticalAlignment="Center"/>
+                        <Slider x:Name="ScaleSlider" ValueChanged="ScaleSlider_ValueChanged" HorizontalAlignment="Right" StepFrequency="0.001" Minimum="0" Maximum="2" MinWidth="150" Margin="30,0,50,0" VerticalAlignment="Center"/>
                         <TextBlock x:Name="ScaleText" Text="" Margin="0,0,20,0" FontSize="15" UseLayoutRounding="False" VerticalAlignment="Center"/>
                     </StackPanel>
                     <TextBlock Text="Color" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="132,0,132,0"/>

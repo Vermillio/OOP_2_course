@@ -347,28 +347,28 @@ void Tetrahedron::create(const float3 &startPoint, float sideLen)
 	float3 D = float3(startPoint.x, startPoint.y - sqrt(3)*sideLen / 6, startPoint.z + sideLen / sqrt(3));
 	//position color
 	vertices = {
-	{ A, float3(0.0f, 0.0f, 0.0f), float3() },
+	{ C, float3(0.0f, 0.0f, 0.0f), float3() },
 	{ B, float3(0.0f, 0.0f, 1.0f), float3() },
-	{ C, float3(0.0f, 1.0f, 0.0f), float3() },
+	{ A, float3(0.0f, 1.0f, 0.0f), float3() },
 
+	{ D, float3(0.0f, 0.0f, 1.0f), float3() },
+	{ C, float3(0.0f, 1.0f, 0.0f), float3() },
+	{ B, float3(0.0f, 1.0f, 1.0f), float3() },
+
+	{ D, float3(0.0f, 0.0f, 0.0f), float3() },
+	{ C, float3(0.0f, 1.0f, 0.0f), float3() },
+	{ A, float3(0.0f, 1.0f, 1.0f), float3() },
+
+	{ D, float3(0.0f, 0.0f, 0.0f), float3() },
 	{ B, float3(0.0f, 0.0f, 1.0f), float3() },
-	{ C, float3(0.0f, 1.0f, 0.0f), float3() },
-	{ D, float3(0.0f, 1.0f, 1.0f), float3() },
-
-	{ A, float3(0.0f, 0.0f, 0.0f), float3() },
-	{ C, float3(0.0f, 1.0f, 0.0f), float3() },
-	{ D, float3(0.0f, 1.0f, 1.0f), float3() },
-
-	{ A, float3(0.0f, 0.0f, 0.0f), float3() },
-	{ B, float3(0.0f, 0.0f, 1.0f), float3() },
-	{ D, float3(0.0f, 1.0f, 1.0f), float3() },
+	{ A, float3(0.0f, 1.0f, 1.0f), float3() },
 	};
 	//triangles
 	indices = {
-		2,1,0,
-		3,4,5,
-		8,7,6,
-		9,10, 11,
+		0,1,2,
+		5,4,3,
+		6,7,8,
+		11,10,9,
 	};
 
 	position = startPoint;
@@ -423,7 +423,7 @@ float3 _3dModelsBuilder::Model::normal(float3 v1, float3 v2, float3 v3)
 	XMVECTOR v1_ = XMLoadFloat3(&v1);
 	XMVECTOR v2_ = XMLoadFloat3(&v2);
 	XMVECTOR v3_ = XMLoadFloat3(&v3);
-	XMVECTOR n = XMVector3Normalize(XMVector3Cross(XMVectorSubtract(v2_, v1_), XMVectorSubtract(v3_, v1_)));
+	XMVECTOR n = XMVector3Normalize(XMVector3Cross(XMVectorSubtract(v3_, v1_), XMVectorSubtract(v2_, v1_)));
 	float3 res;
 	XMStoreFloat3(&res, n);
 	return res;
@@ -564,8 +564,8 @@ void _3dModelsBuilder::Model::rotate(float3 rotation){
 	XMMATRIX current = XMLoadFloat4x4(&m_constantBufferData.model);
 	current = XMMatrixMultiply(
 		XMMatrixMultiply(
-		XMMatrixMultiply(XMMatrixTranspose(XMMatrixRotationX(rotation.x)),
-			XMMatrixRotationY(rotation.y)),
+		XMMatrixMultiply(XMMatrixRotationX(rotation.x),
+			XMMatrixTranspose(XMMatrixRotationY(rotation.y))),
 		XMMatrixTranspose(XMMatrixRotationZ(rotation.z))), current);
 	XMStoreFloat4x4(&m_constantBufferData.model, current);
 	
@@ -602,7 +602,7 @@ void _3dModelsBuilder::Model::scale(float k)
 	XMMATRIX current = XMLoadFloat4x4(&m_constantBufferData.model);
 
 	current = XMMatrixMultiply(
-		XMMatrixScaling(position.x, position.y, position.z), current);
+		XMMatrixScaling(k, k, k), current);
 
 	XMStoreFloat4x4(&m_constantBufferData.model, current);
 	this->scaleCoeff *= k;
@@ -625,10 +625,10 @@ bool _3dModelsBuilder::Model::checkRayCollision(const float3 &rayOrigin, const f
 	XMVECTOR orig = XMLoadFloat3(&rayOrigin);
 	XMVECTOR dir = XMLoadFloat3(&rayDirection);
 //	XMMATRIX model = XMLoadFloat4x4(&m_constantBufferData.model);
-	XMMATRIX inverseviewproj = XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_constantBufferData.view) * XMLoadFloat4x4(&m_constantBufferData.projection));
+	XMMATRIX inversemodelviewproj = XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_constantBufferData.model)*XMLoadFloat4x4(&m_constantBufferData.view) * XMLoadFloat4x4(&m_constantBufferData.projection));
 
-	orig = XMVector4Transform(orig, inverseviewproj);
-	dir = XMVector4Transform(orig, inverseviewproj);
+	orig = XMVector4Transform(orig, inversemodelviewproj);
+	dir = XMVector4Transform(orig, inversemodelviewproj);
 	dir = XMVector3Normalize(dir);
 
 	for (size_t i = 0; i < indices.size(); i += 3) {
@@ -868,6 +868,7 @@ _3dModelsBuilder::Axis::Axis(float3 pos, float length)
 		7, 8, 6,
 
 	};
+	calcNormals();
 };
 
 
