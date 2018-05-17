@@ -93,6 +93,8 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
 
+	cameraPos = float4(0.0f, 0.7f, 1.5f, 0.0f);
+
 	m_constantBufferData.lightPos = { -1.0f, 1.0f, -1.0f };
 	m_constantBufferData.viewPos = { 0.0f, 0.7f, 1.5f };
 	m_constantBufferData.lightColor = { 1.0f, 1.0f, 1.0f };
@@ -144,26 +146,28 @@ void Sample3DSceneRenderer::Render()
 	if (!m_loadingComplete)
 		return;
 
+	//always on top enable
 	auto context = m_deviceResources->GetD3DDeviceContext();
+
+	m_deviceResources->GetD3DDeviceContext()->RSSetState(m_pRasterState.Get());
 
 	for (size_t i = 0; i < models.size(); ++i)
 		models[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);
 
-	//always on top enable
-	ID3D11DepthStencilState *curState;
+	ComPtr<ID3D11DepthStencilState> curState;
 	UINT curStateArg;
 	context->OMGetDepthStencilState(&curState, &curStateArg);
-
 	context->OMSetDepthStencilState(depthDisabledState.Get(), 0);
 
 	renderProjections();
 
+//	renderIntersections();
+
 	for (size_t i = 0; i < models.size(); ++i)
 		models[i].renderAxes(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);
 
-	//always on top disable
-	context->OMSetDepthStencilState(curState, curStateArg);
-
+	////always on top disable
+	context->OMSetDepthStencilState(curState.Get(), curStateArg);
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources()
@@ -256,6 +260,16 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 	// Once the cube is loaded, the object is ready to be rendered.
 	createDepthStates.then([this]() {
+		CD3D11_RASTERIZER_DESC rasterDesc(D3D11_FILL_SOLID, D3D11_CULL_NONE,
+			FALSE /* FrontCounterClockwise */,
+			D3D11_DEFAULT_DEPTH_BIAS,
+			D3D11_DEFAULT_DEPTH_BIAS_CLAMP,
+			D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS,
+			TRUE /* DepthClipEnable */,
+			FALSE /* ScissorEnable */,
+			TRUE /* MultisampleEnable */,
+			FALSE /* AntialiasedLineEnable */);
+		m_deviceResources->GetD3DDevice()->CreateRasterizerState(&rasterDesc, &m_pRasterState);
 		m_loadingComplete = true;
 	});
 
@@ -571,9 +585,9 @@ void _3dModelsBuilder::Model::rotate(float3 rotation){
 		XMMatrixTranspose(XMMatrixRotationZ(rotation.z))), current);
 	XMStoreFloat4x4(&m_constantBufferData.model, current);
 	
-	for (size_t i = 0; i < axes.size(); ++i) {
-		axes[i].rotate(rotation);
-	}
+//	for (size_t i = 0; i < axes.size(); ++i) {
+//		axes[i].rotate(rotation);
+//	}
 	this->rotation = this->rotation + rotation;
 	move(tmpPos);
 }
@@ -618,31 +632,49 @@ void _3dModelsBuilder::Model::setConstantBuffer(const ModelViewProjectionConstan
 	m_constantBufferData.model = model;
 }
 
-bool _3dModelsBuilder::Model::checkRayCollision(const float3 &rayOrigin, const float3 &rayDirection)
+bool _3dModelsBuilder::Model::checkRayCollision(float x, float y, float screenWidth, float screenHeight)
 {
-//	float3 orig_ = float3(rayOrigin.x, rayOrigin.y, rayOrigin.z);
-//	float3 dir_ = float3(rayDirection.x, rayOrigin.y, rayOrigin.z);
-	XMVECTOR orig = XMLoadFloat3(&rayOrigin);
-	XMVECTOR dir = XMLoadFloat3(&rayDirection);
-//	XMMATRIX model = XMLoadFloat4x4(&m_constantBufferData.model);
-	XMMATRIX inversemodelviewproj = XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_constantBufferData.model)*XMLoadFloat4x4(&m_constantBufferData.view) * XMLoadFloat4x4(&m_constantBufferData.projection));
+	float3 orig = float3(x, y, 0);
+	float3 dest = float3(x, y, 1);
+	XMVECTOR orig_unproj = XMVector3Unproject(XMLoadFloat3(&orig),
+		0,
+		0,
+		screenWidth,
+		screenHeight,
+		0,
+		1,
+		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.projection)),
+		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.view)),
+		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.model))
+	);
 
-	orig = XMVector4Transform(orig, inversemodelviewproj);
-	dir = XMVector4Transform(orig, inversemodelviewproj);
-	dir = XMVector3Normalize(dir);
+	XMVECTOR dest_unproj = XMVector3Unproject(XMLoadFloat3(&dest),
+		0,
+		0,
+		screenWidth,
+		screenHeight,
+		0,
+		1,
+		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.projection)),
+		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.view)),
+		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.model))
+	);
+
+	XMVECTOR direction = XMVectorSubtract(dest_unproj, orig_unproj);
+	direction=XMVector3Normalize(direction);
 
 	for (size_t i = 0; i < indices.size(); i += 3) {
-		float3 v0_= float3(vertices[indices[i]].pos.x, vertices[indices[i]].pos.y, vertices[indices[i]].pos.z);
-		float3 v1_ = float3(vertices[indices[i+1]].pos.x, vertices[indices[i+1]].pos.y, vertices[indices[i+1]].pos.z);
-		float3 v2_ = float3(vertices[indices[i+2]].pos.x, vertices[indices[i+2]].pos.y, vertices[indices[i+2]].pos.z);
+		float4 v0_= float4(vertices[indices[i]].pos.x, vertices[indices[i]].pos.y, vertices[indices[i]].pos.z, 0.0f);
+		float4 v1_ = float4(vertices[indices[i+1]].pos.x, vertices[indices[i+1]].pos.y, vertices[indices[i+1]].pos.z, 0.0f);
+		float4 v2_ = float4(vertices[indices[i+2]].pos.x, vertices[indices[i+2]].pos.y, vertices[indices[i+2]].pos.z, 0.0f);
 
-		XMVECTOR v0 = XMLoadFloat3(&v0_);
-		XMVECTOR v1 = XMLoadFloat3(&v1_);
-		XMVECTOR v2 = XMLoadFloat3(&v2_);
+		XMVECTOR v0 = XMLoadFloat4(&v0_);
+		XMVECTOR v1 = XMLoadFloat4(&v1_);
+		XMVECTOR v2 = XMLoadFloat4(&v2_);
 		
 		float dist;
-		if (DirectX::TriangleTests::Intersects(orig, dir, v0, v1,v2, dist) ||
-			DirectX::TriangleTests::Intersects(orig, dir, v2, v1, v0, dist))
+		if (DirectX::TriangleTests::Intersects(orig_unproj, direction, v0, v1,v2, dist) ||
+			DirectX::TriangleTests::Intersects(orig_unproj, direction, v2, v1, v0, dist))
 			return true;
 	}
 	return false;
@@ -729,20 +761,22 @@ void _3dModelsBuilder::Model::renderAxes(std::shared_ptr<DX::DeviceResources>& m
 			axes[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);	
 }
 
-void _3dModelsBuilder::Model::checkAxesCollision(float3 rayOrigin, float3 rayDirection)
+void _3dModelsBuilder::Model::checkAxesCollision(float x, float y, float screenWidth, float screenHeight)
 {
 	if (axes.size() == 0) {
 		selectionAction = 0;
 	}
-	if (axes[0].checkRayCollision(rayOrigin, rayDirection)) {
-		selectionAction = 1;
-	}
-	else if (axes[1].checkRayCollision(rayOrigin, rayDirection)) {
+	if (axes[0].checkRayCollision(x, y, screenWidth, screenHeight)) {
 		selectionAction = 2;
 	}
-	else if (axes[2].checkRayCollision(rayOrigin, rayDirection)) {
+	else if (axes[1].checkRayCollision(x, y, screenWidth, screenHeight)) {
+		selectionAction = 1;
+	}
+	else if (axes[2].checkRayCollision(x, y, screenWidth, screenHeight)) {
 		selectionAction = 3;
 	}
+	else 
+		selectionAction = 0;
 }
 
 void _3dModelsBuilder::Model::applyAction(float2 prevMP, float2 curMP)
@@ -764,22 +798,18 @@ void _3dModelsBuilder::Model::applyAction(float2 prevMP, float2 curMP)
 std::vector<UINT> _3dModelsBuilder::Sample3DSceneRenderer::rayCasting(float x, float y)
 {
 	std::vector<UINT> collidingModels;
-	float2 point = normalizeCoordinates(float2(x, y));
-	float3 rayOrigin = float3(point.x, point.y, 10.0f);
-	float3 rayDirection = float3(0, 0, -1.0f);
-
+	Size screenSize = m_deviceResources->GetLogicalSize();
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected()) {
-			models[i].checkAxesCollision(rayOrigin, rayDirection);
+			models[i].checkAxesCollision(x, y, screenSize.Width, screenSize.Height);
 			collidingModels.push_back(models[i].title());
 		}
-		if (models[i].checkRayCollision(rayOrigin, rayDirection)) {
+		if (models[i].checkRayCollision(x, y, screenSize.Width, screenSize.Height)) {
 			models[i].select();
 			collidingModels.push_back(models[i].title());
 		}
 		else models[i].deselect();
 	}
-
 	return collidingModels;
 }
 
@@ -829,6 +859,12 @@ _3dModelsBuilder::Axis::Axis(float3 pos, float length)
 	vertices[7].pos = pos;
 	vertices[8].pos = pos;
 
+	vertices[6].pos.x -= 0.005;
+	vertices[7].pos.x += 0.005;
+	vertices[8].pos.z -= 0.005;
+	vertices[0].pos.z += 0.005;
+
+
 	vertices[1].pos = pos;
 	vertices[1].pos.y = pos.y + length;
 	vertices[2].pos = pos;
@@ -836,23 +872,16 @@ _3dModelsBuilder::Axis::Axis(float3 pos, float length)
 	vertices[3].pos = vertices[2].pos;
 	vertices[4].pos = vertices[2].pos;
 	vertices[5].pos = vertices[2].pos;
-
-	vertices[6].pos.x -= 0.005;
-	vertices[7].pos.x += 0.005;
-	vertices[8].pos.z -= 0.005;
-	vertices[0].pos.z += 0.005;
-
-
 	
 	vertices[2].pos.y -= 0.06;
 	vertices[3].pos.y -= 0.06;
 	vertices[4].pos.y -= 0.06;
 	vertices[5].pos.y -= 0.06;
 
-	vertices[2].pos.x += 0.02;
-	vertices[3].pos.x -= 0.02;
-	vertices[4].pos.z += 0.02;
-	vertices[5].pos.z -= 0.02;
+	vertices[2].pos.x -= 0.02;
+	vertices[3].pos.x += 0.02;
+	vertices[4].pos.z -= 0.02;
+	vertices[5].pos.z += 0.02;
 	indices = {
 		1, 2, 4,
 		1, 5, 2,
@@ -867,10 +896,10 @@ _3dModelsBuilder::Axis::Axis(float3 pos, float length)
 		1, 7, 8,
 		6, 7, 0,
 		7, 8, 6,
+
 	};
 	calcNormals();
 };
-
 
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderMoveX(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {

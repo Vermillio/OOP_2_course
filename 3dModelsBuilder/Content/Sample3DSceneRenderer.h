@@ -8,15 +8,10 @@
 #include "..\Common\DirectXHelper.h"
 #include "pch.h"
 #include <DirectXMath.h>
+#include "VectorGeometry.h"
 
 namespace _3dModelsBuilder
 {
-
-	using float3 = DirectX::XMFLOAT3;
-	using float2 = DirectX::XMFLOAT2;
-	using float4 = DirectX::XMFLOAT4;
-	using float4x4 = DirectX::XMFLOAT4X4;
-
 	template<class T>
 	using ComPtr= Microsoft::WRL::ComPtr<T>;
 
@@ -60,6 +55,9 @@ namespace _3dModelsBuilder
 		XMStoreFloat4(&vec_, vec);
 		return float3(vec_.x, vec_.y, vec_.z);
 	}
+
+	bool intersectRayTriangle(float3 rayOrig, float3 rayDir, float3 v0, float3 v1, float3 v2);
+
 
 	class Model {
 	protected:
@@ -124,13 +122,13 @@ namespace _3dModelsBuilder
 		void scale(float k);
 
 		void setConstantBuffer(const ModelViewProjectionConstantBuffer &buff);
-		bool checkRayCollision(const float3 &rayOrigin, const float3 &rayDirection);
 
 		void createAxes();
 		void render(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode);
 		void renderAxes(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode);
 
-		void checkAxesCollision(float3 rayOrigin, float3 rayDirection);
+		bool checkRayCollision(float x, float y, float screenWidth, float screenHeight);
+		void checkAxesCollision(float x, float y, float screenWidth, float screenHeight);
 
 		void applyAction(float2 prevMP, float2 curMP);
 	};
@@ -220,7 +218,10 @@ namespace _3dModelsBuilder
 		ComPtr<ID3D11PixelShader>	m_pixelShader;
 		ComPtr<ID3D11Buffer>		m_constantBuffer;
 		ComPtr<ID3D11DepthStencilState> depthDisabledState;
+		ComPtr<ID3D11RasterizerState> m_pRasterState;
 		UINT depthStateArg;
+
+		float4 cameraPos;
 
 		bool isXprojRendering;
 		bool isYprojRendering;
