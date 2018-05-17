@@ -10,10 +10,11 @@
 #include <DirectXMath.h>
 #include "VectorGeometry.h"
 
+using std::vector;
+using Microsoft::WRL::ComPtr;
+
 namespace _3dModelsBuilder
 {
-	template<class T>
-	using ComPtr= Microsoft::WRL::ComPtr<T>;
 
 	struct Vertex {
 		float3 pos;
@@ -56,8 +57,6 @@ namespace _3dModelsBuilder
 		return float3(vec_.x, vec_.y, vec_.z);
 	}
 
-	bool intersectRayTriangle(float3 rayOrig, float3 rayDir, float3 v0, float3 v1, float3 v2);
-
 
 	class Model {
 	protected:
@@ -77,7 +76,7 @@ namespace _3dModelsBuilder
 		//4 - scale
 		int selectionAction=0;
 
-		std::vector<Model> axes;
+		vector<Model> axes;
 
 		bool isVertexBufferSet;
 		bool isIndexBufferSet;
@@ -95,8 +94,8 @@ namespace _3dModelsBuilder
 
 		ModelViewProjectionConstantBuffer		m_constantBufferData;
 
-		std::vector<Vertex> vertices;
-		std::vector<unsigned short> indices;
+		vector<Vertex> vertices;
+		vector<unsigned short> indices;
 
 		Model();
 		~Model() {};
@@ -171,7 +170,7 @@ namespace _3dModelsBuilder
 		bool isVertexBufferSet;
 		bool isIndexBufferSet;
 
-		std::vector<UINT> rayCasting(float x, float y);
+		vector<UINT> rayCasting(float x, float y);
 
 
 		//orthogonal projection switch
@@ -192,7 +191,7 @@ namespace _3dModelsBuilder
 		void sliderGreen(float val);
 		void sliderBlue(float val);
 
-		std::vector<UINT> RemoveSelected();
+		vector<UINT> RemoveSelected();
 		void ResetSelected();
 
 		D3D11_PRIMITIVE_TOPOLOGY drawingMode;
@@ -203,9 +202,10 @@ namespace _3dModelsBuilder
 
 	private:
 
-		std::vector<Model> models;
+		vector<Model> models;
 
-		std::vector<Axis> axes;
+		vector<Axis> axes;
+
 
 		// Cached pointer to device resources.
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
