@@ -1,11 +1,14 @@
 #pragma once
 #include <DirectXMath.h>
 #include <vector>
+#include <DirectXCollision.h>
 
 using float3 = DirectX::XMFLOAT3;
 using float2 = DirectX::XMFLOAT2;
 using float4 = DirectX::XMFLOAT4;
 using float4x4 = DirectX::XMFLOAT4X4;
+
+using std::vector;
 
 inline float DotProduct(float3 a, float3 b) {
 	return a.x * b.x + a.y * b.y + a.z * b.z;
@@ -79,7 +82,8 @@ inline float sign(const float3 &p1, const float3 &p2, const float3 &p3)
 }
 
 inline bool pointOnLine(const float3 &a, const float3 &l0, const float3 &l1) {
-	return ((a.x - l0.x) / (l1.x - l0.x) == (a.y - l0.y) / (l1.y - l0.y) == (a.z - l0.z) / (l1.z - l0.z));
+	float epsilon = 0.000001;
+	return ((a.x - l0.x) / (l1.x - l0.x) - (a.y - l0.y) / (l1.y - l0.y) < epsilon &&  (a.z - l0.z) / (l1.z - l0.z) - (a.y - l0.y) / (l1.y - l0.y) < epsilon);
 }
 
 inline bool pointOnPlane(const float3 &a, const float3 &nv, const float3 &p) {
@@ -125,7 +129,11 @@ inline bool intersectSeg(const float3& a0, const float3 &a1, const float3 &b0, c
 }
 
 inline float3 intersectLinePlane(const float3 &p, const float3 &nv, const float3 &l0, const float3 &l1) {
-	float k = DotProduct(nv, p) / DotProduct(l1 - p, nv);
+	float denom = DotProduct(l1 - p, nv);
+	if (denom == 0) {
+		return (l1 + l0) * 0.5f;
+	}
+	float k = DotProduct(nv, p) / denom;
 	return l0 * k + l1;
 }
 
@@ -136,128 +144,41 @@ inline bool intersectLineTriangle(const float3 &a0, const float3 &a1, const floa
 	else return false;
 }
 
-inline void intersectTriangles(const float3 &a0, const float3 &a1, const float3 &a2, const float3 &b0, const float3 &b1, const float3 &b2, std::vector<float3> &ips) {
+inline vector<float3> intersectTriangles(const float3 &a0, const float3 &a1, const float3 &a2, const float3 &b0, const float3 &b1, const float3 &b2) {
 
-	//degenerative cases
-	if (a0 == a1) {
-		if (a1 == a2)
-			if (a2 == b0) {
-				ips.push_back(a0);
-				return;
-			}
-			else if (a2 == b1) {
-				ips.push_back(a0);
-				return;
-			}
-			else if (a2 == b2) {
-				ips.push_back(a0);
-				return;
-			}
-			else return;
-			if (b0 == b1) {
-				if (b1 == b2)
-					if (b2 == a0) {
-						ips.push_back(b0);
-						return;
-					}
-					else if (b2 == a1) {
-						ips.push_back(b0);
-						return;
-					}
-					else if (b2 == a2) {
-						ips.push_back(b0);
-						return;
-					}
-					else return;
-			}
-	}
-
-
+	vector<float3> intersections;
 	float3 points1[] = { a0, a1, a2 };
 	float3 points2[] = { b0, b1, b2 };
-
-	for (int i = 0; i < 3; ++i) {
-		int i_1 = (i + 1) % 3;
-		bool hasMutualPlane = false;
-		for (int j = 0; j < 3; ++j) {
-			int j_1 = (j + 1) % 3;
-
-			float3 cross = CrossProduct(points1[i_1] - points1[i_1], points2[j_1] - points1[i]);
-			if (cross == float3(0, 0, 0)) {
-				if (pointOnLine(points1[i], points1[i_1], points2[j])) {
-
-					if (points1[i] <= points1[i_1]) {
-						if (points1[i_1] <= points2[j]) {
-
-							ips.push_back(points1[i_1]);
-							if (points2[j] <= points2[j_1])
-								ips.push_back(points2[j]);
-							else if (points1[i] <= points2[j_1])
-								ips.push_back(points2[j_1]);
-							else ips.push_back(points1[i]);
-
-						}
-						else if (points1[i] <= points2[j]) {
-							ips.push_back(points2[j]);
-							if (points2[j_1] <= points1[i])
-								ips.push_back(points1[i]);
-							else if (points1[i_1] <= points2[j_1])
-								ips.push_back(points1[i_1]);
-							else ips.push_back(points2[j_1]);
-						}
-						else {
-							ips.push_back(points1[i]);
-							if (points2[j_1] <= points2[j])
-								ips.push_back(points2[j]);
-							else if (points1[i_1] <= points2[j_1])
-								ips.push_back(points1[i_1]);
-							else ips.push_back(points2[j_1]);
-						}
-					}
-					else if (points1[i] <= points2[j]) {
-						ips.push_back(points1[i]);
-						if (points2[j] <= points2[j_1])
-							ips.push_back(points2[j]);
-						else if (points1[i_1] <= points2[j_1])
-							ips.push_back(points2[j_1]);
-						else ips.push_back(points1[j_1]);
-					}
-					else if (points1[i_1] <= points2[j]) {
-						ips.push_back(points2[j]);
-						if (points2[j_1] <= points1[i_1])
-							ips.push_back(points1[i_1]);
-						else if (points1[i] <= points2[j_1])
-							ips.push_back(points1[i]);
-						else ips.push_back(points2[j_1]);
-					}
-					else {
-						ips.push_back(points1[i_1]);
-						if (points2[j_1] <= points2[j])
-							ips.push_back(points2[j]);
-						else if (points1[i] <= points2[j_1])
-							ips.push_back(points1[i]);
-						else ips.push_back(points2[j_1]);
-					}
-					continue;
-				}
-				continue;
-			}
-
-			else if (pointOnPlane(points1[i], cross, points2[j_1]))
-			{
-				hasMutualPlane = true;
-				float3 ip;
-				if (intersectSeg(points1[i], points1[i_1], points2[j], points2[j_1], ip))
-				{
-					ips.push_back(ip);
-				}
-			}
+	for (int i = 0; i < 3; ++i)
+	{
+		float dist;
+		float3 d1 = points1[i==2 ? 0 : i+1] - points1[i];
+		float3 d2= points2[i==2?0:i+1] - points2[i];
+		DirectX::XMVECTOR dir1 = DirectX::XMVector3Normalize(XMLoadFloat3(&d1));
+		DirectX::XMVECTOR dir2 = DirectX::XMVector3Normalize(XMLoadFloat3(&d2));
+		XMStoreFloat3(&d1, dir1);
+		XMStoreFloat3(&d2, dir2);
+		if (!DirectX::Internal::XMVector3IsUnit(dir1))
+			continue;
+		if (DirectX::TriangleTests::Intersects(XMLoadFloat3(&points1[i]), dir1, 
+			XMLoadFloat3(&points2[0]), XMLoadFloat3(&points2[1]),
+			XMLoadFloat3(&points2[2]), dist)
+			) 
+		{
+			float3 ip = points1[i] +  d1*dist;
+			intersections.push_back(ip);
 		}
-		float3 ip;
-		if (!hasMutualPlane && intersectLineTriangle(b0, b1, b2, points1[i], points1[i_1], ip)) {
-			ips.push_back(ip);
-			//general case
+		if (!DirectX::Internal::XMVector3IsUnit(dir2))
+			continue;
+		if (DirectX::TriangleTests::Intersects(
+			XMLoadFloat3(&points2[i]), dir2, 
+			XMLoadFloat3(&points1[0]), XMLoadFloat3(&points1[1]), 
+			XMLoadFloat3(&points1[2]), dist)
+			) 
+		{
+			float3 ip = points2[i] +  d2 * dist;
+			intersections.push_back(ip);
 		}
 	}
-	return;
+	return intersections;
 }

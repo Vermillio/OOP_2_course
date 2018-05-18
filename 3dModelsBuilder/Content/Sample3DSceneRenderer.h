@@ -12,6 +12,7 @@
 
 using std::vector;
 using Microsoft::WRL::ComPtr;
+using std::shared_ptr;
 
 namespace _3dModelsBuilder
 {
@@ -21,41 +22,6 @@ namespace _3dModelsBuilder
 		float3 color;
 		float3 normal;
 	};
-
-	inline float DotProduct(float3 a, float3 b) {
-		return a.x * b.x + a.y * b.y + a.z * b.z;
-	}
-
-	inline float3 CrossProduct(float3 a, float3 b) {
-		float x = a.y*b.z - a.z*b.y;
-		float y = a.z*b.x - a.x*b.z;
-		float z = a.x*b.y - a.y*b.x;
-		return float3(x, y, z);
-	}
-
-	inline float3 operator-(float3 a) { return float3(-a.x, -a.y, -a.z); };
-
-	inline float3 operator*(float3 a, float k) {
-		return float3(a.x *k, a.y *k, a.z *k);
-	}
-
-	inline float3 operator+(float3 a, float3 b) {
-		return float3(a.x + b.x, a.y + b.y, a.z + b.z);
-	}
-
-	inline float3 operator-(float3 a, float3 b) {
-		return float3(a.x-b.x, a.y-b.y, a.z-b.z);
-	}
-
-	inline float3 transformFloat3(const float3 &_vector, const float4x4 &matrix) {
-		float4 vector = float4(_vector.x, _vector.y, _vector.z, 1.0f);
-		DirectX::XMVECTOR vec = XMLoadFloat4(&vector);
-		DirectX::XMMATRIX mat = XMLoadFloat4x4(&matrix);
-		vec = XMVector4Transform(vec, mat);
-		float4 vec_;
-		XMStoreFloat4(&vec_, vec);
-		return float3(vec_.x, vec_.y, vec_.z);
-	}
 
 
 	class Model {
@@ -97,7 +63,9 @@ namespace _3dModelsBuilder
 		vector<Vertex> vertices;
 		vector<unsigned short> indices;
 
+		void init();
 		Model();
+		Model(const vector<float3> &vertices, vector<unsigned short> &indices);
 		~Model() {};
 
 		UINT title() const { return _title; }
@@ -105,7 +73,7 @@ namespace _3dModelsBuilder
 		void select() { _isSelected = true; }
 		void deselect() { _isSelected = false; selectionAction = 0; }
 
-		void updateBuffers(const std::shared_ptr<DX::DeviceResources>&deviceResources);
+		void updateBuffers(const shared_ptr<DX::DeviceResources>&deviceResources);
 		void setColor(float3 color);
 		//reset
 		void setIdentity();
@@ -121,15 +89,17 @@ namespace _3dModelsBuilder
 		void scale(float k);
 
 		void setConstantBuffer(const ModelViewProjectionConstantBuffer &buff);
-
+		ModelViewProjectionConstantBuffer getConstantBuffer() const { return m_constantBufferData; };
 		void createAxes();
-		void render(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode);
-		void renderAxes(std::shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode);
+		void render(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode) ;
+		void renderAxes(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode) ;
 
 		bool checkRayCollision(float x, float y, float screenWidth, float screenHeight);
 		void checkAxesCollision(float x, float y, float screenWidth, float screenHeight);
 
 		void applyAction(float2 prevMP, float2 curMP);
+
+		void intersect(const Model &model, Model & intersection);
 	};
 	
 	class Axis;
@@ -143,7 +113,7 @@ namespace _3dModelsBuilder
 
 //		std::string currentFilename;
 	public:
-		Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		Sample3DSceneRenderer(const shared_ptr<DX::DeviceResources>& deviceResources);
 
 
 		float2 normalizeCoordinates(float2 mousePoint);
@@ -154,6 +124,7 @@ namespace _3dModelsBuilder
 		void ReleaseDeviceDependentResources();
 		void Update(DX::StepTimer const& timer);
 		void Render();
+		void render( vector<Model> &models, shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode);
 		void StartTracking();
 		void StartPointerMove() { m_pointerMove = true; }
 		void StopPointerMove() { m_pointerMove = false; }
@@ -207,8 +178,12 @@ namespace _3dModelsBuilder
 		vector<Axis> axes;
 
 
+		vector<Model> intersections;
+
+		void recalcIntersections();
+
 		// Cached pointer to device resources.
-		std::shared_ptr<DX::DeviceResources> m_deviceResources;
+		shared_ptr<DX::DeviceResources> m_deviceResources;
 
 		// Direct3D resources for cube geometry.
 		ComPtr<ID3D11InputLayout>	m_inputLayout;
@@ -241,6 +216,7 @@ namespace _3dModelsBuilder
 		bool m_pointerMove;
 
 		void renderProjections();
+
 	};
 
 	class Axis : public Model {

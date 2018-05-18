@@ -85,7 +85,7 @@
     <ClInclude Include="SettingsPage.xaml.h" />
     <ClInclude Include="MainPage.xaml.h" />
     <ClInclude Include="NoFilePage.xaml.h" />
-    <ClInclude Include="VectorGeometry.h">
+    <ClInclude Include="Content\VectorGeometry.h">
       <Filter>Content</Filter>
     </ClInclude>
   </ItemGroup>
