@@ -13,6 +13,8 @@
 using std::vector;
 using Microsoft::WRL::ComPtr;
 using std::shared_ptr;
+using Windows::UI::Input::PointerPointProperties;
+
 
 namespace _3dModelsBuilder
 {
@@ -94,8 +96,8 @@ namespace _3dModelsBuilder
 		void render(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 &world) ;
 		void renderAxes(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 &world) ;
 
-		bool checkRayCollision(float x, float y, float screenWidth, float screenHeight);
-		void checkAxesCollision(float x, float y, float screenWidth, float screenHeight);
+		bool checkRayCollision(float x, float y, float screenWidth, float screenHeight, float4x4 world);
+		bool checkAxesCollision(float x, float y, float screenWidth, float screenHeight, float4x4 world);
 
 		void applyAction(float2 prevMP, float2 curMP);
 
@@ -129,7 +131,7 @@ namespace _3dModelsBuilder
 		void StartPointerMove() { m_pointerMove = true; }
 		void StopPointerMove() { m_pointerMove = false; }
 		bool IsPointerMove() { return m_pointerMove; }
-		void TrackingUpdate(float2 prevPos, float2 curPos);
+		void TrackingUpdate(float2 prevPos, float2 curPos, bool LeftButtonPressed, bool RightButtonPressed, int MouseWheelDelta);
 		void StopTracking();
 		bool IsTracking() { return m_tracking; }
 		
@@ -164,6 +166,7 @@ namespace _3dModelsBuilder
 
 		vector<UINT> RemoveSelected();
 		void ResetSelected();
+		void ResetWorldModel();
 
 		D3D11_PRIMITIVE_TOPOLOGY drawingMode;
 
@@ -177,7 +180,10 @@ namespace _3dModelsBuilder
 
 		vector<Model> models;
 
-		vector<Axis> axes;
+		Model worldModel;
+
+		void initWorldModel();
+//		vector<Axis> axes;
 
 
 		vector<Model> intersections;

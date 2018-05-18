@@ -51,6 +51,7 @@ namespace _3dModelsBuilder
         private: ::Windows::UI::Xaml::Controls::Button^ AddModelButton;
         private: ::Windows::UI::Xaml::Controls::Button^ RemoveModelButton;
         private: ::Windows::UI::Xaml::Controls::Button^ ResetModelButton;
+        private: ::Windows::UI::Xaml::Controls::Button^ ResetCameraButton;
         private: ::Windows::UI::Xaml::Controls::ToggleSwitch^ DrawingTypeSwitch;
         private: ::Windows::UI::Xaml::Controls::StackPanel^ AddModelOptions;
         private: ::Windows::UI::Xaml::Controls::StackPanel^ Options;

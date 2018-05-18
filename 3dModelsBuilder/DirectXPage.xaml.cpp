@@ -190,16 +190,12 @@ void DirectXPage::AppBarButton_Click(Object^ sender, RoutedEventArgs^ e)
 
 void DirectXPage::OnPointerPressed(Object^ sender, PointerEventArgs^ e)
 {
-//	if (e->KeyModifiers==WM_RBUTTONDOWN)
-	// When the pointer is pressed begin tracking the pointer movement.
-//	IsSaved = false;
-
 	m_main->StartTracking();
-	prevPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
-	RayCasting(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	if (e->CurrentPoint->Properties->IsLeftButtonPressed) {
+		prevPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+		RayCasting(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+	}
 }
-
-//void DirectXPage::RightTapped()
 
 void DirectXPage::OnPointerMoved(Object^ sender, PointerEventArgs^ e)
 {
@@ -208,7 +204,8 @@ void DirectXPage::OnPointerMoved(Object^ sender, PointerEventArgs^ e)
 	{
 		m_main->StartPointerMove();
 		float2 curPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
-		m_main->TrackingUpdate(prevPointerPos, curPointerPos);
+		auto k=e->CurrentPoint->Properties;
+		m_main->TrackingUpdate(prevPointerPos, curPointerPos, e->CurrentPoint->Properties);
 		prevPointerPos = curPointerPos;
 	}
 }
@@ -311,7 +308,6 @@ void _3dModelsBuilder::DirectXPage::BlueSlider_ValueChanged(Platform::Object ^ s
 //	prevPointerPos = curPointerPos;
 }
 
-
 void _3dModelsBuilder::DirectXPage::AddModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	showModelOptions();
@@ -321,8 +317,6 @@ void _3dModelsBuilder::DirectXPage::AddModelButton_Click(Platform::Object^ sende
 
 	//show model configuration dialog
 }
-
-
 
 void _3dModelsBuilder::DirectXPage::OkButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
@@ -400,6 +394,25 @@ void _3dModelsBuilder::DirectXPage::showResetButton()
 	}));
 }
 
+void _3dModelsBuilder::DirectXPage::hideResetCameraButton()
+{
+	ResetCameraButton->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		ResetCameraButton->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+	}));
+}
+
+void _3dModelsBuilder::DirectXPage::showResetCameraButton()
+{
+	ResetCameraButton->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
+		ref new Windows::UI::Core::DispatchedHandler([this]
+	{
+		ResetCameraButton->Visibility = Windows::UI::Xaml::Visibility::Visible;
+	}));
+}
+
+
 void _3dModelsBuilder::DirectXPage::showSliders()
 {
 	Options->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
@@ -422,40 +435,39 @@ void _3dModelsBuilder::DirectXPage::resetSliders()
 {
 	XMoveSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
 		ref new Windows::UI::Core::DispatchedHandler([this]
-	{
+			 {
 		XMoveSlider->Value = 0;
-	}));
+		}));
 	YMoveSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
 		ref new Windows::UI::Core::DispatchedHandler([this]
-	{
+			 {
 		YMoveSlider->Value = 0;
-	}));
+		}));
 	ZMoveSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
 		ref new Windows::UI::Core::DispatchedHandler([this]
-	{
+			 {
 		ZMoveSlider->Value = 0;
-	}));
+		}));
 	XRotateSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
 		ref new Windows::UI::Core::DispatchedHandler([this]
-	{
+			 {
 		XRotateSlider->Value = 0;
-	}));
+		}));
 	YRotateSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
 		ref new Windows::UI::Core::DispatchedHandler([this]
-	{
+			 {
 		YRotateSlider->Value = 0;
-	}));
+		}));
 	ZRotateSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
 		ref new Windows::UI::Core::DispatchedHandler([this]
-	{
+			 {
 		ZRotateSlider->Value = 0;
-	}));
+		}));
 	ScaleSlider->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal,
 		ref new Windows::UI::Core::DispatchedHandler([this]
-	{
+			 {
 		ScaleSlider->Value = 1;
-	}));
-
+		}));
 }
 
 void _3dModelsBuilder::DirectXPage::RayCasting(float x, float y)
@@ -559,4 +571,31 @@ void _3dModelsBuilder::DirectXPage::DrawingTypeSwitch_Toggled(Platform::Object^ 
 	else {
 		m_main->setSolidMode();
 	}
+}
+
+
+void _3dModelsBuilder::DirectXPage::swapChainPanel_ManipulationStarted(Platform::Object^ sender, Windows::UI::Xaml::Input::ManipulationStartedRoutedEventArgs^ e)
+{
+	m_main->StartTracking();
+//	prevPointerPos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
+
+
+}
+
+
+void _3dModelsBuilder::DirectXPage::swapChainPanel_ManipulationCompleted(Platform::Object^ sender, Windows::UI::Xaml::Input::ManipulationCompletedRoutedEventArgs^ e)
+{
+
+}
+
+
+void _3dModelsBuilder::DirectXPage::swapChainPanel_ManipulationDelta(Platform::Object^ sender, Windows::UI::Xaml::Input::ManipulationDeltaRoutedEventArgs^ e)
+{
+
+}
+
+
+void _3dModelsBuilder::DirectXPage::ResetCameraButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	m_main->ResetWorldModel();
 }

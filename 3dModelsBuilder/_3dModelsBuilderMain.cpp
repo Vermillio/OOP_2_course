@@ -104,6 +104,11 @@ bool _3dModelsBuilder::_3dModelsBuilderMain::changeStateOrthoProjectionZ()
 	return m_sceneRenderer->changeStateOrthoProjectionZ();
 }
 
+void _3dModelsBuilder::_3dModelsBuilderMain::ResetWorldModel()
+{
+	m_sceneRenderer->ResetWorldModel();
+}
+
 void _3dModelsBuilder::_3dModelsBuilderMain::moveX(float val) {
 	m_sceneRenderer->sliderMoveX(val);
 };
@@ -157,7 +162,7 @@ void _3dModelsBuilder::_3dModelsBuilderMain::setSolidMode()
 void _3dModelsBuilderMain::ProcessInput()
 {
 	// TODO: Add per frame input handling here.
-	m_sceneRenderer->TrackingUpdate(prevMousePos, curMousePos);
+	m_sceneRenderer->TrackingUpdate(prevMousePos, curMousePos, LBpressed, RBpressed, MWdelta);
 }
 
 // Renders the current frame according to the current application state.

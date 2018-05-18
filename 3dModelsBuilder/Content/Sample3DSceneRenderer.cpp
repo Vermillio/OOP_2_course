@@ -25,6 +25,7 @@ Sample3DSceneRenderer::Sample3DSceneRenderer(const shared_ptr<DX::DeviceResource
 {
 	CreateWindowSizeDependentResources();
 	CreateDeviceDependentResources();
+	initWorldModel();
 }
 
 
@@ -145,21 +146,44 @@ void Sample3DSceneRenderer::StartTracking()
 }
 
 // When tracking, the 3D cube can be rotated around its Y axis by tracking pointer position relative to the output screen width.
-void Sample3DSceneRenderer::TrackingUpdate(float2 prevPos, float2 curPos)
+void Sample3DSceneRenderer::TrackingUpdate(float2 prevPos, float2 curPos, bool LeftButtonPressed, bool RightButtonPressed, int MouseWheelDelta)
 {
 	if (m_tracking)
 	{
+		if (MouseWheelDelta != 0) {
+			float power = pow(1, (1 + (double)MouseWheelDelta*0.005));
+			for (size_t i = 0; i < models.size(); ++i) {
+				if (models[i].isSelected())
+					models[i].scale(power);
+				//			XMMATRIX worldM = XMLoadFloat4x4(&world) * XMMatrixScaling(power, power, power);
+				//			XMStoreFloat4x4(&world, worldM);
+			}
+		}
 		float2 prevPosNormalized = normalizeCoordinates(prevPos);
 		float2 curPosNormalized = normalizeCoordinates(curPos);
-		for (size_t i = 0; i < models.size(); ++i) {
-			if (models[i].isSelected())
-				models[i].applyAction(prevPosNormalized, curPosNormalized);			
+
+		if (LeftButtonPressed) {
+			for (size_t i = 0; i < models.size(); ++i) {
+				if (models[i].isSelected())
+					models[i].applyAction(prevPosNormalized, curPosNormalized);
+			}
+		}
+		else if (RightButtonPressed) {
+//			rotate(float3(, , 0));
+
+			XMMATRIX worldM;
+			if (abs(curPosNormalized.y - prevPosNormalized.y) > abs(curPosNormalized.x - prevPosNormalized.x))
+				worldM = XMMatrixMultiply(XMMatrixRotationX(curPosNormalized.y - prevPosNormalized.y), XMLoadFloat4x4(&world));
+			else 
+				worldM = XMMatrixMultiply(XMMatrixTranspose(XMMatrixRotationY(curPosNormalized.x - prevPosNormalized.x)), XMLoadFloat4x4(&world));
+			XMStoreFloat4x4(&world, worldM);
 		}
 		recalcIntersections();
 	}
+
 }
 
-void Sample3DSceneRenderer::StopTracking()
+	void Sample3DSceneRenderer::StopTracking()
 {
 	m_tracking = false;
 }
@@ -183,10 +207,13 @@ void Sample3DSceneRenderer::Render()
 	context->OMGetDepthStencilState(&curState, &curStateArg);
 	context->OMSetDepthStencilState(depthDisabledState.Get(), 0);
 
-	render(intersections, m_deviceResources, context, m_constantBuffer, m_vertexShader, m_flatPixelShader, m_inputLayout, D3D_PRIMITIVE_TOPOLOGY_LINESTRIP, world);
+	render(intersections, m_deviceResources, context, m_constantBuffer, m_vertexShader, m_flatPixelShader, m_inputLayout, D3D_PRIMITIVE_TOPOLOGY_LINELIST, world);
 
+	worldModel.renderAxes(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_flatPixelShader, m_inputLayout, drawingMode, world);
+	
 	for (size_t i = 0; i < models.size(); ++i)
-		models[i].renderAxes(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_flatPixelShader, m_inputLayout, drawingMode, world);
+		if (models[i].isSelected())
+			models[i].renderAxes(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_flatPixelShader, m_inputLayout, drawingMode, world);
 
 	renderProjections();
 
@@ -402,10 +429,10 @@ Tetrahedron::Tetrahedron(UINT title, const float3 &startPoint, float sideLen)
 
 void Tetrahedron::create(const float3 &startPoint, float sideLen)
 {
-	float3 A = float3(startPoint.x, startPoint.y + sideLen / sqrt(3), startPoint.z);
-	float3 B = float3(startPoint.x + sideLen / 2, startPoint.y - sqrt(3)*sideLen / 6, startPoint.z - sqrt(3)*sideLen / 6);
-	float3 C = float3(startPoint.x - sideLen / 2, startPoint.y - sqrt(3)*sideLen / 6, startPoint.z - sqrt(3)*sideLen / 6);
-	float3 D = float3(startPoint.x, startPoint.y - sqrt(3)*sideLen / 6, startPoint.z + sideLen / sqrt(3));
+	float3 A = float3(startPoint.x, startPoint.y + sideLen / (float)sqrt(3), startPoint.z);
+	float3 B = float3(startPoint.x + sideLen / 2.0f, startPoint.y - (float)sqrt(3)*sideLen / 6.0f, startPoint.z - (float)(float)sqrt(3)*sideLen / 6.0f);
+	float3 C = float3(startPoint.x - sideLen / 2.0f, startPoint.y - (float)sqrt(3)*sideLen / 6.0f, startPoint.z - (float)(float)sqrt(3)*sideLen / 6.0f);
+	float3 D = float3(startPoint.x, startPoint.y - (float)sqrt(3)*sideLen / 6, startPoint.z + sideLen / (float)sqrt(3));
 	//position color
 	vertices = {
 	{ C, float3(0.0f, 0.0f, 0.0f), float3() },
@@ -456,7 +483,7 @@ void _3dModelsBuilder::Sample3DSceneRenderer::addCube(UINT title, float3 startPo
 
 void _3dModelsBuilder::Sample3DSceneRenderer::addTetrahedron(UINT title)
 {
-	models.push_back(Tetrahedron(title, float3(0, 0, 0), 0.8));
+	models.push_back(Tetrahedron(title, float3(0, 0, 0), 0.8f));
 	models[models.size() - 1].setConstantBuffer(m_constantBufferData);
 	models[models.size() - 1].createAxes();
 
@@ -654,20 +681,20 @@ void _3dModelsBuilder::Model::rotate(float3 rotation){
 
 void _3dModelsBuilder::Model::move(float3 position)
 {
-	if (this->position.x + position.x > 1)
-		position.x = 1 - this->position.x;
-	else if (this->position.x + position.x < -1)
-		position.x = -1 - this->position.x;
+	if (this->position.x + position.x > 2)
+		position.x = 2 - this->position.x;
+	else if (this->position.x + position.x < -2)
+		position.x = -2 - this->position.x;
 
-	if (this->position.y + position.y > 1)
-		position.y = 1 - this->position.y;
-	else if (this->position.y + position.y < -1)
-		position.y = -1 - this->position.y;
+	if (this->position.y + position.y > 2)
+		position.y = 2 - this->position.y;
+	else if (this->position.y + position.y < -2)
+		position.y = -2 - this->position.y;
 
-	if (this->position.z + position.z > 1)
-		position.z = 1 - this->position.z;
-	else if (this->position.z + position.z < -1)
-		position.z = -1 - this->position.z;
+	if (this->position.z + position.z > 2)
+		position.z = 2 - this->position.z;
+	else if (this->position.z + position.z < -2)
+		position.z = -2 - this->position.z;
 
 
 
@@ -711,7 +738,7 @@ void _3dModelsBuilder::Model::setConstantBuffer(const ModelViewProjectionConstan
 	m_constantBufferData.model = model;
 }
 
-bool _3dModelsBuilder::Model::checkRayCollision(float x, float y, float screenWidth, float screenHeight)
+bool _3dModelsBuilder::Model::checkRayCollision(float x, float y, float screenWidth, float screenHeight, float4x4 world)
 {
 	float3 orig = float3(x, y, 0);
 	float3 dest = float3(x, y, 1);
@@ -724,7 +751,7 @@ bool _3dModelsBuilder::Model::checkRayCollision(float x, float y, float screenWi
 		1,
 		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.projection)),
 		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.view)),
-		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.model))
+		XMMatrixTranspose(XMLoadFloat4x4(&world)*XMLoadFloat4x4(&m_constantBufferData.model))
 	);
 
 	XMVECTOR dest_unproj = XMVector3Unproject(XMLoadFloat3(&dest),
@@ -736,7 +763,7 @@ bool _3dModelsBuilder::Model::checkRayCollision(float x, float y, float screenWi
 		1,
 		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.projection)),
 		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.view)),
-		XMMatrixTranspose(XMLoadFloat4x4(&m_constantBufferData.model))
+		XMMatrixTranspose(XMLoadFloat4x4(&world)*XMLoadFloat4x4(&m_constantBufferData.model))
 	);
 
 	XMVECTOR direction = XMVectorSubtract(dest_unproj, orig_unproj);
@@ -844,27 +871,31 @@ void _3dModelsBuilder::Model::render(shared_ptr<DX::DeviceResources> &m_deviceRe
 
 void _3dModelsBuilder::Model::renderAxes(shared_ptr<DX::DeviceResources>& m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 &world)
 {
-	if (isSelected())
-		for (size_t i = 0; i < axes.size(); ++i)
-			axes[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode, world);	
+//	if (isSelected())
+	for (size_t i = 0; i < axes.size(); ++i)
+		axes[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode, world);	
 }
 
-void _3dModelsBuilder::Model::checkAxesCollision(float x, float y, float screenWidth, float screenHeight)
+bool _3dModelsBuilder::Model::checkAxesCollision(float x, float y, float screenWidth, float screenHeight, float4x4 world)
 {
 	if (axes.size() == 0) {
 		selectionAction = 0;
+		return false;
 	}
-	if (axes[0].checkRayCollision(x, y, screenWidth, screenHeight)) {
+	if (axes[0].checkRayCollision(x, y, screenWidth, screenHeight, world)) {
 		selectionAction = 2;
+		return true;
 	}
-	else if (axes[1].checkRayCollision(x, y, screenWidth, screenHeight)) {
+	else if (axes[1].checkRayCollision(x, y, screenWidth, screenHeight, world)) {
 		selectionAction = 1;
+		return true;
 	}
-	else if (axes[2].checkRayCollision(x, y, screenWidth, screenHeight)) {
+	else if (axes[2].checkRayCollision(x, y, screenWidth, screenHeight, world)) {
 		selectionAction = 3;
+		return true;
 	}
-	else 
-		selectionAction = 0;
+	else selectionAction = 0;
+	return false;
 }
 
 void _3dModelsBuilder::Model::applyAction(float2 prevMP, float2 curMP)
@@ -873,13 +904,13 @@ void _3dModelsBuilder::Model::applyAction(float2 prevMP, float2 curMP)
 		rotate(float3(curMP.y-prevMP.y, curMP.x - prevMP.x, 0));
 	}
 	else if (selectionAction == 1) {
-		move(float3(curMP.x - prevMP.x, position.y,position.z));
+		move(float3(curMP.x - prevMP.x, 0,0));
 	}
 	else if (selectionAction == 2) {
-		move(float3(position.x,curMP.y - prevMP.y, position.z));
+		move(float3(0,curMP.y - prevMP.y, 0));
 	}
 	else if (selectionAction == 3) {
-		move(float3(position.x, position.y, -(curMP.y - prevMP.y)));
+		move(float3(0, 0, -(curMP.y - prevMP.y)));
 	}
 }
 
@@ -917,16 +948,17 @@ void _3dModelsBuilder::Model::intersect(const Model & model, Model & intersectio
 				p[4], p[5]);
 
 			if (curIPoints.size() != 0) {
-				IPoints.insert(IPoints.end(), curIPoints.begin(), curIPoints.end());
 				for (int k = 0; k < curIPoints.size(); ++k) {
 					for (int l = k + 1; l < curIPoints.size(); ++l) {
 						indices.push_back(IPoints.size() + k);
 						indices.push_back(IPoints.size() + l);
 					}
 				}
+				IPoints.insert(IPoints.end(), curIPoints.begin(), curIPoints.end());
 			}
 		}
 	}
+
 	intersection=Model(IPoints, indices);
 }
 
@@ -936,10 +968,12 @@ vector<UINT> _3dModelsBuilder::Sample3DSceneRenderer::rayCasting(float x, float 
 	Size screenSize = m_deviceResources->GetLogicalSize();
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected()) {
-			models[i].checkAxesCollision(x, y, screenSize.Width, screenSize.Height);
-			collidingModels.push_back(models[i].title());
+			if (models[i].checkAxesCollision(x, y, screenSize.Width, screenSize.Height, world) || 
+				models[i].checkRayCollision(x, y, screenSize.Width, screenSize.Height, world))
+				collidingModels.push_back(models[i].title());
+			else models[i].deselect();
 		}
-		if (models[i].checkRayCollision(x, y, screenSize.Width, screenSize.Height)) {
+		else if (models[i].checkRayCollision(x, y, screenSize.Width, screenSize.Height, world)) {
 			models[i].select();
 			collidingModels.push_back(models[i].title());
 		}
@@ -995,10 +1029,10 @@ _3dModelsBuilder::Axis::Axis(float3 pos, float length)
 	vertices[7].pos = pos;
 	vertices[8].pos = pos;
 
-	vertices[6].pos.x -= 0.005;
-	vertices[7].pos.x += 0.005;
-	vertices[8].pos.z -= 0.005;
-	vertices[0].pos.z += 0.005;
+	vertices[6].pos.x -= 0.005f;
+	vertices[7].pos.x += 0.005f;
+	vertices[8].pos.z -= 0.005f;
+	vertices[0].pos.z += 0.005f;
 
 
 	vertices[1].pos = pos;
@@ -1009,15 +1043,15 @@ _3dModelsBuilder::Axis::Axis(float3 pos, float length)
 	vertices[4].pos = vertices[2].pos;
 	vertices[5].pos = vertices[2].pos;
 	
-	vertices[2].pos.y -= 0.06;
-	vertices[3].pos.y -= 0.06;
-	vertices[4].pos.y -= 0.06;
-	vertices[5].pos.y -= 0.06;
+	vertices[2].pos.y -= 0.06f;
+	vertices[3].pos.y -= 0.06f;
+	vertices[4].pos.y -= 0.06f;
+	vertices[5].pos.y -= 0.06f;
 
-	vertices[2].pos.x -= 0.02;
-	vertices[3].pos.x += 0.02;
-	vertices[4].pos.z -= 0.02;
-	vertices[5].pos.z += 0.02;
+	vertices[2].pos.x -= 0.02f;
+	vertices[3].pos.x += 0.02f;
+	vertices[4].pos.z -= 0.02f;
+	vertices[5].pos.z += 0.02f;
 	indices = {
 		1, 2, 4,
 		1, 5, 2,
@@ -1129,6 +1163,10 @@ void _3dModelsBuilder::Sample3DSceneRenderer::ResetSelected()
 	}
 
 }
+void _3dModelsBuilder::Sample3DSceneRenderer::ResetWorldModel()
+{
+	XMStoreFloat4x4(&world, XMMatrixIdentity());
+}
 void _3dModelsBuilder::Sample3DSceneRenderer::setWireframeMode()
 {
 	drawingMode = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
@@ -1138,6 +1176,12 @@ void _3dModelsBuilder::Sample3DSceneRenderer::setSolidMode()
 	drawingMode = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 }
 
+void _3dModelsBuilder::Sample3DSceneRenderer::initWorldModel()
+{
+	worldModel.setConstantBuffer(m_constantBufferData);
+	worldModel.createAxes();
+}
+
 void _3dModelsBuilder::Sample3DSceneRenderer::recalcIntersections()
 {
 	intersections.clear();
@@ -1145,6 +1189,8 @@ void _3dModelsBuilder::Sample3DSceneRenderer::recalcIntersections()
 		for (size_t j = i + 1; j < models.size(); ++j) {
 			Model intersection;
 			models[i].intersect(models[j], intersection);
+			if (intersection.vertices.size() == 0 || intersection.indices.size() == 0)
+				continue;
 			auto buffer = models[j].getConstantBuffer();
 			XMStoreFloat4x4(&buffer.model, XMMatrixIdentity());
 			intersection.setConstantBuffer(buffer);

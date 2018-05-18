@@ -112,6 +112,8 @@ namespace _3dModelsBuilder
 		void showRemoveButton();
 		void hideResetButton();
 		void showResetButton();
+		void hideResetCameraButton();
+		void showResetCameraButton();
 		void showSliders();
 		void hideSliders();
 		void resetSliders();
@@ -127,6 +129,10 @@ namespace _3dModelsBuilder
 		void RemoveModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void ResetModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void DrawingTypeSwitch_Toggled(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void swapChainPanel_ManipulationStarted(Platform::Object^ sender, Windows::UI::Xaml::Input::ManipulationStartedRoutedEventArgs^ e);
+		void swapChainPanel_ManipulationCompleted(Platform::Object^ sender, Windows::UI::Xaml::Input::ManipulationCompletedRoutedEventArgs^ e);
+		void swapChainPanel_ManipulationDelta(Platform::Object^ sender, Windows::UI::Xaml::Input::ManipulationDeltaRoutedEventArgs^ e);
+		void ResetCameraButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 };
 }
 

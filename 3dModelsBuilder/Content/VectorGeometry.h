@@ -7,6 +7,7 @@ using float3 = DirectX::XMFLOAT3;
 using float2 = DirectX::XMFLOAT2;
 using float4 = DirectX::XMFLOAT4;
 using float4x4 = DirectX::XMFLOAT4X4;
+using DirectX::XMMATRIX;
 
 using std::vector;
 
@@ -41,6 +42,15 @@ inline bool operator<=(float3 a, float3 b) {
 
 inline bool operator==(float3 a, float3 b) {
 	return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
+float4x4 operator*(float4x4 &x, float4x4 &y) {
+	XMMATRIX mX = XMLoadFloat4x4(&x);
+	XMMATRIX mY = XMLoadFloat4x4(&y);
+	XMMATRIX resM = XMMatrixMultiply(mX, mY);
+	float4x4 res;
+	XMStoreFloat4x4(&res, resM);
+	return res;
 }
 
 inline vector<float3> intersectTriangles(const float3 &a0, const float3 &a1, const float3 &a2, const float3 &b0, const float3 &b1, const float3 &b2) {

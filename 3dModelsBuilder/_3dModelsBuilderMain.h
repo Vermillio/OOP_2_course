@@ -12,8 +12,8 @@ namespace _3dModelsBuilder
 	using float2 = DirectX::XMFLOAT2;
 	using float4 = DirectX::XMFLOAT4;
 
-	template<class T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
+//	using Microsoft::WRL::ComPtr;
+	using Windows::UI::Input::PointerPointProperties;
 
 
 	class _3dModelsBuilderMain : public DX::IDeviceNotify
@@ -26,7 +26,14 @@ namespace _3dModelsBuilder
 		void StartPointerMove() { m_sceneRenderer->StartPointerMove(); }
 		void StopPointerMove() { m_sceneRenderer->StopPointerMove(); }
 		bool IsPointerMove() { return m_sceneRenderer->IsPointerMove(); }
-		void TrackingUpdate(float2 prevPos, float2 curPos) { curMousePos = curPos; prevMousePos = prevPos; }
+		void TrackingUpdate(float2 prevPos, float2 curPos, PointerPointProperties ^ properties) 
+		{	
+			curMousePos = curPos; prevMousePos = prevPos;
+			LBpressed = properties->IsLeftButtonPressed;
+			RBpressed = properties->IsRightButtonPressed;
+			MWdelta = properties->MouseWheelDelta;
+
+		}
 		void StopTracking() { m_sceneRenderer->StopTracking(); }
 		bool IsTracking() { return m_sceneRenderer->IsTracking(); }
 		void StartRenderLoop();
@@ -72,6 +79,8 @@ namespace _3dModelsBuilder
 		bool changeStateOrthoProjectionX();
 		bool changeStateOrthoProjectionY();
 		bool changeStateOrthoProjectionZ();
+
+		void ResetWorldModel();
 	private:
 		void ProcessInput();
 		void Update();
@@ -93,6 +102,8 @@ namespace _3dModelsBuilder
 		// Track current input pointer position.
 		float2 prevMousePos;
 		float2 curMousePos;
-
+		bool LBpressed, RBpressed;
+		int MWdelta;
+//		const PointerPointProperties ^ pointerProperties;
 	};
 }
