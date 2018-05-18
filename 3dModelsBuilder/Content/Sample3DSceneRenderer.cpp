@@ -56,7 +56,28 @@ bool _3dModelsBuilder::Sample3DSceneRenderer::parseModelFile(std::string filenam
 void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 {
 	Size outputSize = m_deviceResources->GetOutputSize();
-	float aspectRatio = outputSize.Width / outputSize.Height;
+	float width = outputSize.Width;
+	float height = outputSize.Height;
+
+	viewports.resize(4);
+
+	viewports[0].Width = width;
+	viewports[0].Height = height;
+	viewports[0].MinDepth = 0.0f;
+	viewports[0].MaxDepth = 1.0f;
+	viewports[0].TopLeftX = 0;
+	viewports[0].TopLeftY = 0;
+
+//	viewports[1].Width = width / ;
+//	viewports[1].Height = height;
+//	viewports[1].MinDepth = 0.0f;
+//	viewports[1].MaxDepth = 1.0f;
+//	viewports[1].TopLeftX = ;
+//	viewports[1].TopLeftY = 0;
+
+
+
+	float aspectRatio = width / height;
 	float fovAngleY = 70.0f * XM_PI / 180.0f;
 
 	// This is a simple example of change that can be made when the app is in
@@ -98,6 +119,10 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 	m_constantBufferData.lightPos = { -1.0f, 1.0f, -1.0f };
 	m_constantBufferData.viewPos = { 0.0f, 0.7f, 1.5f };
 	m_constantBufferData.lightColor = { 1.0f, 1.0f, 1.0f };
+
+
+	XMMATRIX worldM = XMMatrixIdentity();
+	XMStoreFloat4x4(&world, worldM);
 }
 
 //// Called once per frame, rotates the cube and calculates the model and view matrices.
@@ -127,11 +152,10 @@ void Sample3DSceneRenderer::TrackingUpdate(float2 prevPos, float2 curPos)
 		float2 prevPosNormalized = normalizeCoordinates(prevPos);
 		float2 curPosNormalized = normalizeCoordinates(curPos);
 		for (size_t i = 0; i < models.size(); ++i) {
-			if (models[i].isSelected()) {
-				models[i].applyAction(prevPosNormalized, curPosNormalized);
-				recalcIntersections();
-			}
+			if (models[i].isSelected())
+				models[i].applyAction(prevPosNormalized, curPosNormalized);			
 		}
+		recalcIntersections();
 	}
 }
 
@@ -152,17 +176,19 @@ void Sample3DSceneRenderer::Render()
 
 	m_deviceResources->GetD3DDeviceContext()->RSSetState(m_pRasterState.Get());
 
-	render(models, m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);
+	render(models, m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode, world);
 
 	ComPtr<ID3D11DepthStencilState> curState;
 	UINT curStateArg;
 	context->OMGetDepthStencilState(&curState, &curStateArg);
 	context->OMSetDepthStencilState(depthDisabledState.Get(), 0);
 
-	render(intersections, m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	render(intersections, m_deviceResources, context, m_constantBuffer, m_vertexShader, m_flatPixelShader, m_inputLayout, D3D_PRIMITIVE_TOPOLOGY_LINESTRIP, world);
 
 	for (size_t i = 0; i < models.size(); ++i)
-		models[i].renderAxes(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);
+		models[i].renderAxes(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_flatPixelShader, m_inputLayout, drawingMode, world);
+
+	renderProjections();
 
 //	render(projections, m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);
 
@@ -170,10 +196,10 @@ void Sample3DSceneRenderer::Render()
 	context->OMSetDepthStencilState(curState.Get(), curStateArg);
 }
 
-void _3dModelsBuilder::Sample3DSceneRenderer::render( vector<Model>& models, shared_ptr<DX::DeviceResources>& m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode)
+void _3dModelsBuilder::Sample3DSceneRenderer::render( vector<Model>& models, shared_ptr<DX::DeviceResources>& m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 & world)
 {
 	for (size_t i = 0; i < models.size(); ++i) {
-		models[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);
+		models[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode, world);
 	}
 }
 
@@ -182,6 +208,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 	// Load shaders asynchronously.
 	auto loadVSTask = DX::ReadDataAsync(L"SampleVertexShader.cso");
 	auto loadPSTask = DX::ReadDataAsync(L"SamplePixelShader.cso");
+	auto loadPS2Task = DX::ReadDataAsync(L"FlatPixelShader.cso");
 
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const vector<byte>& fileData) {
@@ -237,9 +264,20 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 				&m_constantBuffer
 			)
 		);
-		int in = 0;
 	});
-	auto createDepthStates = createPSTask.then([this]() {
+
+	auto createPS2Task = loadPS2Task.then([this](const vector<byte>& fileData) {
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreatePixelShader(
+				&fileData[0],
+				fileData.size(),
+				nullptr,
+				&m_flatPixelShader
+			)
+		);
+	});
+
+	auto createDepthStates = createPS2Task.then([this]() {
 		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 
 		depthStencilDesc.DepthEnable = FALSE;
@@ -619,17 +657,17 @@ void _3dModelsBuilder::Model::move(float3 position)
 	if (this->position.x + position.x > 1)
 		position.x = 1 - this->position.x;
 	else if (this->position.x + position.x < -1)
-		position.x = -1 + this->position.x;
+		position.x = -1 - this->position.x;
 
 	if (this->position.y + position.y > 1)
 		position.y = 1 - this->position.y;
 	else if (this->position.y + position.y < -1)
-		position.y = -1 + this->position.y;
+		position.y = -1 - this->position.y;
 
 	if (this->position.z + position.z > 1)
 		position.z = 1 - this->position.z;
 	else if (this->position.z + position.z < -1)
-		position.z = -1 + this->position.z;
+		position.z = -1 - this->position.z;
 
 
 
@@ -742,19 +780,25 @@ void _3dModelsBuilder::Model::createAxes()
 	axes[2].setConstantBuffer(m_constantBufferData);
 }
 
-void _3dModelsBuilder::Model::render(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode)
+void _3dModelsBuilder::Model::render(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 &world)
 {
 	if (vertices.size() == 0 || indices.size() == 0)
 		return;
 
 	updateBuffers(m_deviceResources);
 
+	auto newBuffer = m_constantBufferData;
+	XMMATRIX model_m = XMLoadFloat4x4(&newBuffer.model);
+	XMMATRIX world_m = XMLoadFloat4x4(&world);
+	model_m = XMMatrixMultiply(world_m, model_m);
+	XMStoreFloat4x4(&newBuffer.model, model_m);
+
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
 		m_constantBuffer.Get(),
 		0,
 		NULL,
-		&m_constantBufferData,
+		&newBuffer,
 		0,
 		0,
 		0
@@ -798,11 +842,11 @@ void _3dModelsBuilder::Model::render(shared_ptr<DX::DeviceResources> &m_deviceRe
 	);
 }
 
-void _3dModelsBuilder::Model::renderAxes(shared_ptr<DX::DeviceResources>& m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode)
+void _3dModelsBuilder::Model::renderAxes(shared_ptr<DX::DeviceResources>& m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 &world)
 {
 	if (isSelected())
 		for (size_t i = 0; i < axes.size(); ++i)
-			axes[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode);	
+			axes[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode, world);	
 }
 
 void _3dModelsBuilder::Model::checkAxesCollision(float x, float y, float screenWidth, float screenHeight)
@@ -846,9 +890,9 @@ void _3dModelsBuilder::Model::intersect(const Model & model, Model & intersectio
 	vector<unsigned short> indices;
 
 
-	for (size_t i = 0; i < this->indices.size(); i += 3)
-		for (size_t j = 0; j < model.indices.size(); j+=3) {
-			
+	for (size_t i = 0; i < this->indices.size(); i += 3) {
+		for (size_t j = 0; j < model.indices.size(); j += 3) {
+
 			XMVECTOR v[] = { XMVector3Transform(XMLoadFloat3(&this->vertices[this->indices[i]].pos),
 								XMMatrixTranspose(XMLoadFloat4x4(&this->m_constantBufferData.model))),
 							XMVector3Transform(XMLoadFloat3(&this->vertices[this->indices[i + 1]].pos),
@@ -867,7 +911,7 @@ void _3dModelsBuilder::Model::intersect(const Model & model, Model & intersectio
 			for (size_t i = 0; i < 6; ++i)
 				XMStoreFloat3(&p[i], v[i]);
 
-			curIPoints=intersectTriangles(
+			curIPoints = intersectTriangles(
 				p[0], p[1],
 				p[2], p[3],
 				p[4], p[5]);
@@ -876,12 +920,13 @@ void _3dModelsBuilder::Model::intersect(const Model & model, Model & intersectio
 				IPoints.insert(IPoints.end(), curIPoints.begin(), curIPoints.end());
 				for (int k = 0; k < curIPoints.size(); ++k) {
 					for (int l = k + 1; l < curIPoints.size(); ++l) {
-						indices.push_back(IPoints.size()+k);
+						indices.push_back(IPoints.size() + k);
 						indices.push_back(IPoints.size() + l);
 					}
 				}
 			}
 		}
+	}
 	intersection=Model(IPoints, indices);
 }
 
@@ -927,12 +972,16 @@ void _3dModelsBuilder::Sample3DSceneRenderer::renderProjections()
 {
 	if (isXprojRendering)
 	{
+		//zy coordinates as xy
 	}	//
 	if (isYprojRendering)
 	{
+		//zx coordinates as xy
 	}	//
 	if (isZprojRendering)
 	{
+
+		//xy coordinates as xy
 	}
 
 }
@@ -991,49 +1040,53 @@ void _3dModelsBuilder::Sample3DSceneRenderer::sliderMoveX(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected()) {
 			models[i].moveAbs(float3(val, models[i].position.y, models[i].position.z));
-			recalcIntersections();
 		}
 	}
+	recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderMoveY(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected()) {
 			models[i].moveAbs(float3(models[i].position.x, val, models[i].position.z));
-			recalcIntersections();
 		}
 	}
+	recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderMoveZ(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected()) {
 			models[i].moveAbs(float3(models[i].position.x, models[i].position.y, val));
-			recalcIntersections();
 		}
 	}
+	recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderRotateX(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected())
 			models[i].rotateAbs(float3(val, models[i].rotation.y, models[i].rotation.z));
 	}
+	recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderRotateY(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected())
 			models[i].rotateAbs(float3(models[i].rotation.x, val, models[i].rotation.z));
 	}
+	recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderRotateZ(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected())
 			models[i].rotateAbs(float3(models[i].rotation.x, models[i].rotation.y, val));
 	}
+	recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderScale(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected())
 			models[i].scaleAbs(val);
 	}
+	recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderRed(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {

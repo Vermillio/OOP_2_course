@@ -107,4 +107,9 @@
     <Page Include="MainPage.xaml" />
     <Page Include="NoFilePage.xaml" />
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="FlatPixelShader.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+  </ItemGroup>
 </Project>

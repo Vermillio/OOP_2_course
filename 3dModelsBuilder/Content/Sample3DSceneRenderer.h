@@ -91,8 +91,8 @@ namespace _3dModelsBuilder
 		void setConstantBuffer(const ModelViewProjectionConstantBuffer &buff);
 		ModelViewProjectionConstantBuffer getConstantBuffer() const { return m_constantBufferData; };
 		void createAxes();
-		void render(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode) ;
-		void renderAxes(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode) ;
+		void render(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 &world) ;
+		void renderAxes(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 &world) ;
 
 		bool checkRayCollision(float x, float y, float screenWidth, float screenHeight);
 		void checkAxesCollision(float x, float y, float screenWidth, float screenHeight);
@@ -124,7 +124,7 @@ namespace _3dModelsBuilder
 		void ReleaseDeviceDependentResources();
 		void Update(DX::StepTimer const& timer);
 		void Render();
-		void render( vector<Model> &models, shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode);
+		void render( vector<Model> &models, shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 &world);
 		void StartTracking();
 		void StartPointerMove() { m_pointerMove = true; }
 		void StopPointerMove() { m_pointerMove = false; }
@@ -173,12 +173,20 @@ namespace _3dModelsBuilder
 
 	private:
 
+		float4x4 world;
+
 		vector<Model> models;
 
 		vector<Axis> axes;
 
 
 		vector<Model> intersections;
+
+		//0 - standard
+		//1 - x proj
+		//2 - y proj
+		//3 - z proj
+		vector<D3D11_VIEWPORT> viewports;
 
 		void recalcIntersections();
 
@@ -191,6 +199,8 @@ namespace _3dModelsBuilder
 		ComPtr<ID3D11Buffer>		m_indexBuffer;
 		ComPtr<ID3D11VertexShader>	m_vertexShader;
 		ComPtr<ID3D11PixelShader>	m_pixelShader;
+		ComPtr<ID3D11PixelShader>	m_flatPixelShader;
+
 		ComPtr<ID3D11Buffer>		m_constantBuffer;
 		ComPtr<ID3D11DepthStencilState> depthDisabledState;
 		ComPtr<ID3D11RasterizerState> m_pRasterState;
