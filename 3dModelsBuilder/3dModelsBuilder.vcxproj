@@ -214,6 +214,7 @@
     <ClInclude Include="SettingsPage.xaml.h">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </ClInclude>
+    <ClInclude Include="Vertex.h" />
     <ClInclude Include="_3dModelsBuilderMain.h" />
     <ClInclude Include="DirectXPage.xaml.h">
       <DependentUpon>DirectXPage.xaml</DependentUpon>

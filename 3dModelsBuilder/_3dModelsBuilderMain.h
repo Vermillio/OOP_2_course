@@ -76,9 +76,9 @@ namespace _3dModelsBuilder
 		void setSolidMode();
 
 		//projections
-		bool changeStateOrthoProjectionX();
-		bool changeStateOrthoProjectionY();
-		bool changeStateOrthoProjectionZ();
+		bool switchRenderProjZY();
+		bool switchRenderProjZX();
+		bool switchRenderProjXY();
 
 		void ResetWorldModel();
 	private:

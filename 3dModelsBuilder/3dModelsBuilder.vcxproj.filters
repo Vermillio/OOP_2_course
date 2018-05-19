@@ -88,6 +88,9 @@
     <ClInclude Include="Content\VectorGeometry.h">
       <Filter>Content</Filter>
     </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>Content</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">

@@ -8,6 +8,7 @@ using float2 = DirectX::XMFLOAT2;
 using float4 = DirectX::XMFLOAT4;
 using float4x4 = DirectX::XMFLOAT4X4;
 using DirectX::XMMATRIX;
+using DirectX::XMVECTOR;
 
 using std::vector;
 
@@ -51,6 +52,13 @@ float4x4 operator*(float4x4 &x, float4x4 &y) {
 	float4x4 res;
 	XMStoreFloat4x4(&res, resM);
 	return res;
+}
+
+inline float3 transformFloat3(const float3 &vector, const float4x4 &matrix) {
+	XMVECTOR vec = XMVector3Transform(XMLoadFloat3(&vector), XMMatrixTranspose(XMLoadFloat4x4(&matrix)));
+	float3 vec_;
+	XMStoreFloat3(&vec_, vec);
+	return vec_;
 }
 
 inline vector<float3> intersectTriangles(const float3 &a0, const float3 &a1, const float3 &a2, const float3 &b0, const float3 &b1, const float3 &b2) {

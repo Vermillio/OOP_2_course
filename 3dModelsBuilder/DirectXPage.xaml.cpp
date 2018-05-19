@@ -515,7 +515,7 @@ void _3dModelsBuilder::DirectXPage::swapChainPanel_RightTapped(Platform::Object 
 
 void _3dModelsBuilder::DirectXPage::MenuFlyoutItemX_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
-	if (m_main->changeStateOrthoProjectionX())
+	if (m_main->switchRenderProjZY())
 		ItemX->Text = "hide axis X";
 	else ItemX->Text = "show axis X";
 }
@@ -523,7 +523,7 @@ void _3dModelsBuilder::DirectXPage::MenuFlyoutItemX_Click(Platform::Object^ send
 
 void _3dModelsBuilder::DirectXPage::MenuFlyoutItemY_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
-	if (m_main->changeStateOrthoProjectionY())
+	if (m_main->switchRenderProjZX())
 		ItemY->Text = "hide axis Y";
 	else ItemY->Text = "show axis Y";
 }
@@ -531,7 +531,7 @@ void _3dModelsBuilder::DirectXPage::MenuFlyoutItemY_Click(Platform::Object^ send
 
 void _3dModelsBuilder::DirectXPage::MenuFlyoutItemZ_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
-	if (m_main->changeStateOrthoProjectionZ())
+	if (m_main->switchRenderProjXY())
 		ItemZ->Text = "hide axis Z";
 	else ItemZ->Text = "show axis Z";
 }

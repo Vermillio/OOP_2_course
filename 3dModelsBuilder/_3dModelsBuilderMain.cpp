@@ -91,17 +91,17 @@ bool _3dModelsBuilder::_3dModelsBuilderMain::parseModelFile(std::string filename
 	return m_sceneRenderer->parseModelFile(filename);
 }
 
-bool _3dModelsBuilder::_3dModelsBuilderMain::changeStateOrthoProjectionX()
+bool _3dModelsBuilder::_3dModelsBuilderMain::switchRenderProjZY()
 {
-	return m_sceneRenderer->changeStateOrthoProjectionX();
+	return m_sceneRenderer->switchRenderProjZY();
 }
-bool _3dModelsBuilder::_3dModelsBuilderMain::changeStateOrthoProjectionY()
+bool _3dModelsBuilder::_3dModelsBuilderMain::switchRenderProjZX()
 {
-	return m_sceneRenderer->changeStateOrthoProjectionY();
+	return m_sceneRenderer->switchRenderProjZX();
 }
-bool _3dModelsBuilder::_3dModelsBuilderMain::changeStateOrthoProjectionZ()
+bool _3dModelsBuilder::_3dModelsBuilderMain::switchRenderProjXY()
 {
-	return m_sceneRenderer->changeStateOrthoProjectionZ();
+	return m_sceneRenderer->switchRenderProjXY();
 }
 
 void _3dModelsBuilder::_3dModelsBuilderMain::ResetWorldModel()

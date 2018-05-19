@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "Vertex.h"
 #include <string>
 #include <vector>
 #include "..\Common\DeviceResources.h"
@@ -13,19 +14,12 @@
 using std::vector;
 using Microsoft::WRL::ComPtr;
 using std::shared_ptr;
+using std::make_shared;
 using Windows::UI::Input::PointerPointProperties;
 
 
 namespace _3dModelsBuilder
 {
-
-	struct Vertex {
-		float3 pos;
-		float3 color;
-		float3 normal;
-	};
-
-
 	class Model {
 	protected:
 
@@ -38,13 +32,17 @@ namespace _3dModelsBuilder
 		//1 - move x
 		//2 - move y
 		//3 - move z
-		//4 - rotate yz
-		//5 - rotate xz
-		//6 - rotate xy
-		//4 - scale
 		int selectionAction=0;
 
 		vector<Model> axes;
+
+		shared_ptr<Model> projXY, projZX, projZY;
+		bool isProjXYrendering, isProjZXrendering, isProjZYrendering;
+
+
+		void updateProjXY();
+		void updateProjZX();
+		void updateProjZY();
 
 		bool isVertexBufferSet;
 		bool isIndexBufferSet;
@@ -65,14 +63,27 @@ namespace _3dModelsBuilder
 		vector<Vertex> vertices;
 		vector<unsigned short> indices;
 
+
 		void init();
 		Model();
-		Model(const vector<float3> &vertices, vector<unsigned short> &indices);
+		Model(const vector<float3> &vertices, const vector<unsigned short> &indices);
+		Model(const vector<Vertex> &vertices, const vector<unsigned short> &indices);
 		~Model() {};
+
+		void updateMesh(vector<Vertex> &_vertices, vector<unsigned short> & _indices);
 
 		UINT title() const { return _title; }
 		bool isSelected() const { return _isSelected; }
-		void select() { _isSelected = true; }
+		void select() 
+		{ 
+			_isSelected = true; 
+			if (isProjXYrendering)
+				updateProjXY();
+			if (isProjZXrendering)
+				updateProjZX();
+			if (isProjZYrendering)
+				updateProjZY();
+		}
 		void deselect() { _isSelected = false; selectionAction = 0; }
 
 		void updateBuffers(const shared_ptr<DX::DeviceResources>&deviceResources);
@@ -95,18 +106,25 @@ namespace _3dModelsBuilder
 		void createAxes();
 		void render(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 &world) ;
 		void renderAxes(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 &world) ;
-
+		void renderProjections(shared_ptr<DX::DeviceResources> &m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer> &m_constantBuffer, ComPtr<ID3D11VertexShader> &m_vertexShader, ComPtr<ID3D11PixelShader> &m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D11_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 &world);
 		bool checkRayCollision(float x, float y, float screenWidth, float screenHeight, float4x4 world);
 		bool checkAxesCollision(float x, float y, float screenWidth, float screenHeight, float4x4 world);
 
 		void applyAction(float2 prevMP, float2 curMP);
 
 		void intersect(const Model &model, Model & intersection);
+
+		void startRenderProjXY() { isProjXYrendering = true; updateProjXY(); };
+		void stopRenderProjXY() { isProjXYrendering = false; };
+
+		void startRenderProjZX() { isProjZXrendering = true; updateProjZX(); };
+		void stopRenderProjZX() { isProjZXrendering = false; };
+
+		void startRenderProjZY() { isProjZYrendering = true; updateProjZY(); };
+		void stopRenderProjZY() { isProjZYrendering = false; };
 	};
 	
 	class Axis;
-
-
 
 	// This sample renderer instantiates a basic rendering pipeline.
 	class Sample3DSceneRenderer
@@ -147,9 +165,9 @@ namespace _3dModelsBuilder
 
 
 		//orthogonal projection switch
-		bool changeStateOrthoProjectionX();
-		bool changeStateOrthoProjectionY();
-		bool changeStateOrthoProjectionZ();
+		bool switchRenderProjZY();
+		bool switchRenderProjZX();
+		bool switchRenderProjXY();
 
 		//sliders
 
@@ -183,16 +201,9 @@ namespace _3dModelsBuilder
 		Model worldModel;
 
 		void initWorldModel();
-//		vector<Axis> axes;
-
 
 		vector<Model> intersections;
 
-		//0 - standard
-		//1 - x proj
-		//2 - y proj
-		//3 - z proj
-		vector<D3D11_VIEWPORT> viewports;
 
 		void recalcIntersections();
 
@@ -214,9 +225,9 @@ namespace _3dModelsBuilder
 
 		float4 cameraPos;
 
-		bool isXprojRendering;
-		bool isYprojRendering;
-		bool isZprojRendering;
+		bool isZYprojRendering;
+		bool isZXprojRendering;
+		bool isXYprojRendering;
 
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer	m_constantBufferData;
@@ -230,8 +241,6 @@ namespace _3dModelsBuilder
 		bool	m_tracking;
 
 		bool m_pointerMove;
-
-		void renderProjections();
 
 	};
 
