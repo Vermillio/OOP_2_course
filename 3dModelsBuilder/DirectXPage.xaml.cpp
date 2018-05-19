@@ -513,37 +513,6 @@ void _3dModelsBuilder::DirectXPage::swapChainPanel_RightTapped(Platform::Object 
 		//ShowAttachedFlyout(sender);
 }
 
-void _3dModelsBuilder::DirectXPage::MenuFlyoutItemX_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
-{
-	if (m_main->switchRenderProjZY())
-		ItemX->Text = "hide axis X";
-	else ItemX->Text = "show axis X";
-}
-
-
-void _3dModelsBuilder::DirectXPage::MenuFlyoutItemY_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
-{
-	if (m_main->switchRenderProjZX())
-		ItemY->Text = "hide axis Y";
-	else ItemY->Text = "show axis Y";
-}
-
-
-void _3dModelsBuilder::DirectXPage::MenuFlyoutItemZ_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
-{
-	if (m_main->switchRenderProjXY())
-		ItemZ->Text = "hide axis Z";
-	else ItemZ->Text = "show axis Z";
-}
-
-
-void _3dModelsBuilder::DirectXPage::OrthoProjButton_Click(Platform::Object^ sender, Windows::UI::Core::PointerEventArgs^ e)
-{
-//	float2 curMousePos = float2(e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y);
-//	Windows::UI::Xaml::FrameworkElement^ placementTarget;
-	OrthoProjButton->ContextFlyout->ShowAt((FrameworkElement^)sender);
-}
-
 
 void _3dModelsBuilder::DirectXPage::RemoveModelButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
@@ -598,4 +567,35 @@ void _3dModelsBuilder::DirectXPage::swapChainPanel_ManipulationDelta(Platform::O
 void _3dModelsBuilder::DirectXPage::ResetCameraButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	m_main->ResetWorldModel();
+}
+
+void _3dModelsBuilder::DirectXPage::CheckboxZY_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	m_main->switchRenderProjZY();
+}
+
+
+void _3dModelsBuilder::DirectXPage::CheckboxZX_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	m_main->switchRenderProjZX();
+}
+
+
+void _3dModelsBuilder::DirectXPage::CheckboxXY_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	m_main->switchRenderProjXY();
+}
+
+void _3dModelsBuilder::DirectXPage::IntersecButton_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	if (intersectionsRendering) {
+		intersectionsRendering = false;
+		m_main->StopIntersectionsRendering();
+		IntersecIcon->Glyph = "K";
+	}
+	else {
+		intersectionsRendering = true;
+		m_main->StartIntersectionsRendering();
+		IntersecIcon->Glyph = "B";
+	}
 }

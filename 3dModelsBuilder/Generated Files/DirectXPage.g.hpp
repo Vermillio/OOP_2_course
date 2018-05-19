@@ -45,257 +45,264 @@ void ::_3dModelsBuilder::DirectXPage::Connect(int __connectionId, ::Platform::Ob
         break;
     case 2:
         {
-            this->OrthoProjButton = safe_cast<::Windows::UI::Xaml::Controls::Button^>(__target);
-            (safe_cast<::Windows::UI::Xaml::Controls::Button^>(this->OrthoProjButton))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
-                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::OrthoProjButton_Click);
+            this->FileName = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
         }
         break;
     case 3:
         {
-            this->ItemX = safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(__target);
-            (safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(this->ItemX))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
-                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::MenuFlyoutItemX_Click);
-        }
-        break;
-    case 4:
-        {
-            this->ItemY = safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(__target);
-            (safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(this->ItemY))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
-                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::MenuFlyoutItemY_Click);
-        }
-        break;
-    case 5:
-        {
-            this->ItemZ = safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(__target);
-            (safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(this->ItemZ))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
-                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::MenuFlyoutItemZ_Click);
-        }
-        break;
-    case 6:
-        {
-            this->FileName = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
-        }
-        break;
-    case 7:
-        {
             this->FileTree = safe_cast<::Windows::UI::Xaml::Controls::ListView^>(__target);
         }
         break;
-    case 8:
+    case 4:
         {
             this->AddModelButton = safe_cast<::Windows::UI::Xaml::Controls::Button^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Button^>(this->AddModelButton))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::AddModelButton_Click);
         }
         break;
-    case 9:
+    case 5:
         {
             this->RemoveModelButton = safe_cast<::Windows::UI::Xaml::Controls::Button^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Button^>(this->RemoveModelButton))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::RemoveModelButton_Click);
         }
         break;
-    case 10:
+    case 6:
         {
             this->ResetModelButton = safe_cast<::Windows::UI::Xaml::Controls::Button^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Button^>(this->ResetModelButton))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::ResetModelButton_Click);
         }
         break;
-    case 11:
+    case 7:
         {
             this->ResetCameraButton = safe_cast<::Windows::UI::Xaml::Controls::Button^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Button^>(this->ResetCameraButton))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::ResetCameraButton_Click);
         }
         break;
-    case 12:
+    case 8:
         {
             this->DrawingTypeSwitch = safe_cast<::Windows::UI::Xaml::Controls::ToggleSwitch^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::ToggleSwitch^>(this->DrawingTypeSwitch))->Toggled += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::DrawingTypeSwitch_Toggled);
         }
         break;
-    case 13:
+    case 9:
         {
             this->AddModelOptions = safe_cast<::Windows::UI::Xaml::Controls::StackPanel^>(__target);
         }
         break;
-    case 14:
+    case 10:
         {
             this->Options = safe_cast<::Windows::UI::Xaml::Controls::StackPanel^>(__target);
         }
         break;
-    case 15:
+    case 11:
         {
             this->BlueSlider = safe_cast<::Windows::UI::Xaml::Controls::Slider^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Slider^>(this->BlueSlider))->ValueChanged += ref new ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^))&DirectXPage::BlueSlider_ValueChanged);
         }
         break;
-    case 16:
+    case 12:
         {
             this->BlueText = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
         }
         break;
-    case 17:
+    case 13:
         {
             this->GreenSlider = safe_cast<::Windows::UI::Xaml::Controls::Slider^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Slider^>(this->GreenSlider))->ValueChanged += ref new ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^))&DirectXPage::GreenSlider_ValueChanged);
         }
         break;
-    case 18:
+    case 14:
         {
             this->GreenText = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
         }
         break;
-    case 19:
+    case 15:
         {
             this->RedSlider = safe_cast<::Windows::UI::Xaml::Controls::Slider^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Slider^>(this->RedSlider))->ValueChanged += ref new ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^))&DirectXPage::RedSlider_ValueChanged);
         }
         break;
-    case 20:
+    case 16:
         {
             this->RedText = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
         }
         break;
-    case 21:
+    case 17:
         {
             this->ScaleSlider = safe_cast<::Windows::UI::Xaml::Controls::Slider^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Slider^>(this->ScaleSlider))->ValueChanged += ref new ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^))&DirectXPage::ScaleSlider_ValueChanged);
         }
         break;
-    case 22:
+    case 18:
         {
             this->ScaleText = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
         }
         break;
-    case 23:
+    case 19:
         {
             this->ZRotateSlider = safe_cast<::Windows::UI::Xaml::Controls::Slider^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Slider^>(this->ZRotateSlider))->ValueChanged += ref new ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^))&DirectXPage::ZRotateSlider_ValueChanged);
         }
         break;
-    case 24:
+    case 20:
         {
             this->ZRotateText = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
         }
         break;
-    case 25:
+    case 21:
         {
             this->YRotateSlider = safe_cast<::Windows::UI::Xaml::Controls::Slider^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Slider^>(this->YRotateSlider))->ValueChanged += ref new ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^))&DirectXPage::YRotateSlider_ValueChanged);
         }
         break;
-    case 26:
+    case 22:
         {
             this->YRotateText = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
         }
         break;
-    case 27:
+    case 23:
         {
             this->XRotateSlider = safe_cast<::Windows::UI::Xaml::Controls::Slider^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Slider^>(this->XRotateSlider))->ValueChanged += ref new ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^))&DirectXPage::XRotateSlider_ValueChanged);
         }
         break;
-    case 28:
+    case 24:
         {
             this->XRotateText = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
         }
         break;
-    case 29:
+    case 25:
         {
             this->ZMoveSlider = safe_cast<::Windows::UI::Xaml::Controls::Slider^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Slider^>(this->ZMoveSlider))->ValueChanged += ref new ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^))&DirectXPage::ZMoveSlider_ValueChanged);
         }
         break;
-    case 30:
+    case 26:
         {
             this->ZMoveText = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
         }
         break;
-    case 31:
+    case 27:
         {
             this->YMoveSlider = safe_cast<::Windows::UI::Xaml::Controls::Slider^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Slider^>(this->YMoveSlider))->ValueChanged += ref new ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^))&DirectXPage::YMoveSlider_ValueChanged);
         }
         break;
-    case 32:
+    case 28:
         {
             this->YMoveText = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
         }
         break;
-    case 33:
+    case 29:
         {
             this->XMoveSlider = safe_cast<::Windows::UI::Xaml::Controls::Slider^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Slider^>(this->XMoveSlider))->ValueChanged += ref new ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::Controls::Primitives::RangeBaseValueChangedEventArgs^))&DirectXPage::XMoveSlider_ValueChanged);
         }
         break;
-    case 34:
+    case 30:
         {
             this->XMoveText = safe_cast<::Windows::UI::Xaml::Controls::TextBlock^>(__target);
         }
         break;
-    case 35:
+    case 31:
         {
             this->ModelTypeSwitch = safe_cast<::Windows::UI::Xaml::Controls::ToggleSwitch^>(__target);
         }
         break;
-    case 36:
+    case 32:
         {
             this->OkButton = safe_cast<::Windows::UI::Xaml::Controls::Button^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Button^>(this->OkButton))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::OkButton_Click);
         }
         break;
-    case 37:
+    case 33:
         {
             this->CancelButton = safe_cast<::Windows::UI::Xaml::Controls::Button^>(__target);
             (safe_cast<::Windows::UI::Xaml::Controls::Button^>(this->CancelButton))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
                 (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::CancelButton_Click);
         }
         break;
-    case 38:
+    case 34:
         {
-            ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ element38 = safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(__target);
-            (safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(element38))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
-                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::MenuFlyoutItemX_Click);
+            this->CancelButtonIcon = safe_cast<::Windows::UI::Xaml::Controls::FontIcon^>(__target);
         }
         break;
-    case 39:
+    case 35:
         {
-            ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ element39 = safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(__target);
-            (safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(element39))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
-                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::MenuFlyoutItemX_Click);
+            this->OkButtonIcon = safe_cast<::Windows::UI::Xaml::Controls::FontIcon^>(__target);
         }
         break;
-    case 40:
-        {
-            ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ element40 = safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(__target);
-            (safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(element40))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
-                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::MenuFlyoutItemZ_Click);
-        }
-        break;
-    case 41:
+    case 36:
         {
             this->bottomAppBar = safe_cast<::Windows::UI::Xaml::Controls::AppBar^>(__target);
         }
         break;
+    case 37:
+        {
+            this->ProjButton = safe_cast<::Windows::UI::Xaml::Controls::AppBarButton^>(__target);
+        }
+        break;
+    case 38:
+        {
+            this->IntersecButton = safe_cast<::Windows::UI::Xaml::Controls::AppBarButton^>(__target);
+            (safe_cast<::Windows::UI::Xaml::Controls::AppBarButton^>(this->IntersecButton))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
+                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::IntersecButton_Click);
+        }
+        break;
+    case 39:
+        {
+            this->IntersecIcon = safe_cast<::Windows::UI::Xaml::Controls::FontIcon^>(__target);
+        }
+        break;
+    case 40:
+        {
+            this->ItemX = safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(__target);
+        }
+        break;
+    case 41:
+        {
+            this->ItemY = safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(__target);
+        }
+        break;
     case 42:
         {
-            ::Windows::UI::Xaml::Controls::AppBarButton^ element42 = safe_cast<::Windows::UI::Xaml::Controls::AppBarButton^>(__target);
-            (safe_cast<::Windows::UI::Xaml::Controls::AppBarButton^>(element42))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
-                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::AppBarButton_Click);
+            this->ItemZ = safe_cast<::Windows::UI::Xaml::Controls::MenuFlyoutItem^>(__target);
+        }
+        break;
+    case 43:
+        {
+            ::Windows::UI::Xaml::Controls::CheckBox^ element43 = safe_cast<::Windows::UI::Xaml::Controls::CheckBox^>(__target);
+            (safe_cast<::Windows::UI::Xaml::Controls::CheckBox^>(element43))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
+                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::CheckboxXY_Click);
+        }
+        break;
+    case 44:
+        {
+            ::Windows::UI::Xaml::Controls::CheckBox^ element44 = safe_cast<::Windows::UI::Xaml::Controls::CheckBox^>(__target);
+            (safe_cast<::Windows::UI::Xaml::Controls::CheckBox^>(element44))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
+                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::CheckboxZX_Click);
+        }
+        break;
+    case 45:
+        {
+            ::Windows::UI::Xaml::Controls::CheckBox^ element45 = safe_cast<::Windows::UI::Xaml::Controls::CheckBox^>(__target);
+            (safe_cast<::Windows::UI::Xaml::Controls::CheckBox^>(element45))->Click += ref new ::Windows::UI::Xaml::RoutedEventHandler(this, (void (::_3dModelsBuilder::DirectXPage::*)
+                (::Platform::Object^, ::Windows::UI::Xaml::RoutedEventArgs^))&DirectXPage::CheckboxZY_Click);
         }
         break;
     }

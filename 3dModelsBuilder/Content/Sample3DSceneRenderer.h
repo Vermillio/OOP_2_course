@@ -152,6 +152,9 @@ namespace _3dModelsBuilder
 		void TrackingUpdate(float2 prevPos, float2 curPos, bool LeftButtonPressed, bool RightButtonPressed, int MouseWheelDelta);
 		void StopTracking();
 		bool IsTracking() { return m_tracking; }
+
+		void startIntersectionsRendering() { intersectionsRendering = true; recalcIntersections(); }
+		void stopIntersectionsRendering() { intersectionsRendering = false; intersections.clear(); }
 		
 		void addCube(UINT title);
 		void addCube(UINT title, float3 startPoint, float sideLen, float3 rotation, float3 color);
@@ -193,6 +196,8 @@ namespace _3dModelsBuilder
 		void setSolidMode();
 
 	private:
+
+		bool intersectionsRendering;
 
 		float4x4 world;
 

@@ -94,9 +94,9 @@ inline vector<float3> intersectTriangles(const float3 &a0, const float3 &a1, con
 			float3 ip = points1[cur] + d1 * distCur;
 			intersections.push_back(ip);
 
-			XMStoreFloat3(&d1_inv, v1_inv);
-			ip = points1[next] + d1_inv * distNext;
-			intersections.push_back(ip);
+	//		XMStoreFloat3(&d1_inv, v1_inv);
+	//		ip = points1[next] + d1_inv * distNext;
+	//		intersections.push_back(ip);
 		}
 		else if	(DirectX::TriangleTests::Intersects(XMLoadFloat3(&points1[cur]), v1_inv,
 				XMLoadFloat3(&points2[0]), XMLoadFloat3(&points2[1]),
@@ -111,9 +111,9 @@ inline vector<float3> intersectTriangles(const float3 &a0, const float3 &a1, con
 			float3 ip = points1[next] + d1 * distNext;
 			intersections.push_back(ip);
 
-			XMStoreFloat3(&d1_inv, v1_inv);
-			ip = points1[cur] + d1_inv * distCur;
-			intersections.push_back(ip);
+	//		XMStoreFloat3(&d1_inv, v1_inv);
+	//		ip = points1[cur] + d1_inv * distCur;
+	//		intersections.push_back(ip);
 		}
 
 		if (d2 == float3(0, 0, 0))
@@ -131,9 +131,9 @@ inline vector<float3> intersectTriangles(const float3 &a0, const float3 &a1, con
 			float3 ip = points2[cur] + d2 * distCur;
 			intersections.push_back(ip);
 
-			XMStoreFloat3(&d2_inv, v2_inv);
-			ip = points2[next] + d2_inv * distNext;
-			intersections.push_back(ip);
+	//		XMStoreFloat3(&d2_inv, v2_inv);
+	//		ip = points2[next] + d2_inv * distNext;
+	//		intersections.push_back(ip);
 		}
 		else if	(DirectX::TriangleTests::Intersects(
 				XMLoadFloat3(&points2[cur]), v2_inv,
@@ -149,9 +149,9 @@ inline vector<float3> intersectTriangles(const float3 &a0, const float3 &a1, con
 				float3 ip = points2[next] + d2 * distNext;
 				intersections.push_back(ip);
 
-				XMStoreFloat3(&d2_inv, v2_inv);
-				ip = points2[cur] +  d2_inv * distCur;
-				intersections.push_back(ip);
+	//			XMStoreFloat3(&d2_inv, v2_inv);
+	//			ip = points2[cur] +  d2_inv * distCur;
+	//			intersections.push_back(ip);
 			}
 	}
 	return intersections;

@@ -115,4 +115,9 @@
       <Filter>Content</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Font Include="Assets\MyIcons.ttf">
+      <Filter>Assets</Filter>
+    </Font>
+  </ItemGroup>
 </Project>

@@ -26,8 +26,8 @@ namespace _3dModelsBuilder
 		void StartPointerMove() { m_sceneRenderer->StartPointerMove(); }
 		void StopPointerMove() { m_sceneRenderer->StopPointerMove(); }
 		bool IsPointerMove() { return m_sceneRenderer->IsPointerMove(); }
-		void TrackingUpdate(float2 prevPos, float2 curPos, PointerPointProperties ^ properties) 
-		{	
+		void TrackingUpdate(float2 prevPos, float2 curPos, PointerPointProperties ^ properties)
+		{
 			curMousePos = curPos; prevMousePos = prevPos;
 			LBpressed = properties->IsLeftButtonPressed;
 			RBpressed = properties->IsRightButtonPressed;
@@ -81,6 +81,9 @@ namespace _3dModelsBuilder
 		bool switchRenderProjXY();
 
 		void ResetWorldModel();
+
+		void StartIntersectionsRendering() { m_sceneRenderer->startIntersectionsRendering(); };
+		void StopIntersectionsRendering() { m_sceneRenderer->stopIntersectionsRendering(); };
 	private:
 		void ProcessInput();
 		void Update();

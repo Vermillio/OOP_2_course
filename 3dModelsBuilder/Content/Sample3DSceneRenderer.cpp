@@ -21,7 +21,8 @@ Sample3DSceneRenderer::Sample3DSceneRenderer(const shared_ptr<DX::DeviceResource
 	isZYprojRendering(false),
     isZXprojRendering(false),
     isXYprojRendering(false),
-	drawingMode(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST)
+	drawingMode(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST),
+	intersectionsRendering(true)
 {
 	CreateWindowSizeDependentResources();
 	CreateDeviceDependentResources();
@@ -177,12 +178,13 @@ void Sample3DSceneRenderer::TrackingUpdate(float2 prevPos, float2 curPos, bool L
 
 			XMMATRIX worldM;
 			if (abs(curPosNormalized.y - prevPosNormalized.y) > abs(curPosNormalized.x - prevPosNormalized.x))
-				worldM = XMMatrixMultiply(XMMatrixTranspose(XMMatrixRotationX(curPosNormalized.y - prevPosNormalized.y)), XMLoadFloat4x4(&world));
+				worldM = XMMatrixMultiply(XMMatrixTranspose(XMMatrixRotationX(prevPosNormalized.y - curPosNormalized.y)), XMLoadFloat4x4(&world));
 			else
 				worldM = XMMatrixMultiply(XMMatrixTranspose(XMMatrixRotationY(curPosNormalized.x - prevPosNormalized.x)), XMLoadFloat4x4(&world));
 			XMStoreFloat4x4(&world, worldM);
 		}
-		recalcIntersections();
+		if (intersectionsRendering)
+			recalcIntersections();
 	}
 
 }
@@ -216,7 +218,8 @@ void Sample3DSceneRenderer::Render()
 	context->OMGetDepthStencilState(&curState, &curStateArg);
 	context->OMSetDepthStencilState(depthDisabledState.Get(), 0);
 
-	render(intersections, m_deviceResources, context, m_constantBuffer, m_vertexShader, m_flatPixelShader, m_inputLayout, D3D_PRIMITIVE_TOPOLOGY_LINELIST, world);
+	if (intersectionsRendering)
+		render(intersections, m_deviceResources, context, m_constantBuffer, m_vertexShader, m_flatPixelShader, m_inputLayout, D3D_PRIMITIVE_TOPOLOGY_LINELIST, world);
 
 	worldModel.renderAxes(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_flatPixelShader, m_inputLayout, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, world);
 	
@@ -231,9 +234,10 @@ void Sample3DSceneRenderer::Render()
 
 void _3dModelsBuilder::Sample3DSceneRenderer::render( vector<Model>& models, shared_ptr<DX::DeviceResources>& m_deviceResources, ID3D11DeviceContext3 * context, ComPtr<ID3D11Buffer>& m_constantBuffer, ComPtr<ID3D11VertexShader>& m_vertexShader, ComPtr<ID3D11PixelShader>& m_pixelShader, ComPtr<ID3D11InputLayout>& m_inputLayout, D3D_PRIMITIVE_TOPOLOGY drawingMode, const float4x4 & world)
 {
-	for (size_t i = 0; i < models.size(); ++i) {
-		models[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode, world);
-	}
+	if (models.size()!=0)
+		for (size_t i = 0; i < models.size(); ++i) {
+			models[i].render(m_deviceResources, context, m_constantBuffer, m_vertexShader, m_pixelShader, m_inputLayout, drawingMode, world);
+		}
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources()
@@ -388,40 +392,50 @@ void Cube::create(const float3 &startPoint, float sideLen)
 		{float3(Bx, Ay, Bz),  float3(0,0,0), float3(0, 0, 1)},
 		{float3(Ax, By, Bz),  float3(0,0,0), float3(0, 0, 1)},
 		{float3(Bx, By, Bz),  float3(0,0,0), float3(0, 0, 1)},
+		
 		{float3(Ax, By, Bz),  float3(0,0,0), float3(0, 1, 0)},
 		{float3(Bx, By, Bz),  float3(0,0,0), float3(0, 1, 0)},
 		{float3(Ax, By, Az),  float3(0,0,0), float3(0, 1, 0)},
 		{float3(Bx, By, Az),  float3(0,0,0), float3(0, 1, 0)},
+		
 		{float3(Ax, By, Az),  float3(0,0,0), float3(0, 0, -1)},
 		{float3(Bx, By, Az),  float3(0,0,0), float3(0, 0, -1)},
 		{float3(Ax, Ay, Az),  float3(0,0,0), float3(0, 0, -1)},
 		{float3(Bx, Ay, Az),  float3(0,0,0), float3(0, 0, -1)},
+		
 		{float3(Ax, Ay, Az),  float3(0,0,0), float3(0, -1, 0)},
 		{float3(Bx, Ay, Az),  float3(0,0,0), float3(0, -1, 0)},
 		{float3(Ax, Ay, Bz),  float3(0,0,0), float3(0, -1, 0)},
 		{float3(Bx, Ay, Bz),  float3(0,0,0), float3(0, -1, 0)},
+			
 		{float3(Bx, Ay, Bz),  float3(0,0,0), float3(1, 0, 0)},
 		{float3(Bx, Ay, Az),  float3(0,0,0), float3(1, 0, 0)},
 		{float3(Bx, By, Bz),  float3(0,0,0), float3(1, 0, 0)},
 		{float3(Bx, By, Az),  float3(0,0,0), float3(1, 0, 0)},
+		
 		{float3(Ax, Ay, Az),  float3(0,0,0), float3(-1, 0, 0)},
 		{float3(Ax, Ay, Bz),  float3(0,0,0), float3(-1, 0, 0)},
 		{float3(Ax, By, Az),  float3(0,0,0), float3(-1, 0, 0)},
 		{float3(Ax, By, Bz),  float3(0,0,0), float3(-1, 0, 0)},
 	};
 	indices = {
-				1,  0, 2,
-				1,  2, 3,
-				5,  4, 6,
-				5,  6, 7,
-				9,  8, 10,
-				9, 10,11,
-				13,12, 14,
-				13,14, 15,
-				17,16, 18,
-				17,18, 19,
-				21,20, 22,
-				21,22, 23 };
+				1,0,  2,
+				2, 3, 1,
+
+				4, 6, 7,
+				7, 5, 4,
+				
+				9, 8, 11,
+				11, 8, 10,
+				
+				13, 12, 14,
+				14,15,13,
+				
+				18,19,16,
+				16, 19, 17,
+				
+				21,20,22,
+				22, 23,21,};
 
 	position = startPoint;
 	scaleCoeff = 1;
@@ -461,7 +475,7 @@ void Tetrahedron::create(const float3 &startPoint, float sideLen)
 	indices = {
 		0,1,2,
 		5,4,3,
-		6,7,8,
+		7,8,6,
 		11,10,9,
 	};
 
@@ -521,8 +535,8 @@ void _3dModelsBuilder::Model::updateProjXY()
 
 	vector<unsigned short> i_proj = indices;
 	for (size_t i = 0; i < v_proj.size()/2; ++i) {
-		indices.push_back(i);
-		indices.push_back(i + v_proj.size()/2);
+		i_proj.push_back(i);
+		i_proj.push_back(i + v_proj.size()/2);
 	}
 	
 	if (!projXY) {
@@ -655,11 +669,13 @@ void _3dModelsBuilder::Model::updateMesh(vector<Vertex>& _vertices, vector<unsig
 
 void _3dModelsBuilder::Model::updateBuffers(const shared_ptr<DX::DeviceResources>& deviceResources)
 {
+	if (vertices.size() == 0 || indices.size() == 0)
+		return;
 	auto context = deviceResources->GetD3DDeviceContext();
 	if (isVertexBufferSet)
 	{
-		// This is where it copies the new vertices to the buffer.
-		// but it's causing flickering in the entire screen...
+		if (vertices.size() == 0)
+			return;
 		D3D11_MAPPED_SUBRESOURCE resource;
 		context->Map(m_vertexBuffers.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
 		memcpy(resource.pData, &vertices[0], sizeof(Vertex)*vertices.size());
@@ -685,14 +701,20 @@ void _3dModelsBuilder::Model::updateBuffers(const shared_ptr<DX::DeviceResources
 	}
 
 	if (isIndexBufferSet) {
+		int m_indexCount = sizeof(indices);
+		if (m_indexCount == 0) {
+			int k = m_indexCount;
+		}
 		D3D11_MAPPED_SUBRESOURCE resource;
 		context->Map(m_indexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
 		memcpy(resource.pData, &indices[0], sizeof(unsigned int) * sizeof(indices));
 		context->Unmap(m_indexBuffer.Get(), 0);
 	}
 	else {
-		int m_indexCount = sizeof(indices);
 		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+		if (indices.size() == 0) {
+			return;
+		}
 		indexBufferData.pSysMem = &indices[0];
 		indexBufferData.SysMemPitch = 0;
 		indexBufferData.SysMemSlicePitch = 0;
@@ -947,10 +969,7 @@ void _3dModelsBuilder::Model::render(shared_ptr<DX::DeviceResources> &m_deviceRe
 	if (vertices.size() == 0 || indices.size() == 0)
 		return;
 
-	
-
 	updateBuffers(m_deviceResources);
-
 	auto newBuffer = m_constantBufferData;
 	XMMATRIX model_m = XMLoadFloat4x4(&newBuffer.model);
 	XMMATRIX world_m = XMLoadFloat4x4(&world);
@@ -1226,13 +1245,15 @@ _3dModelsBuilder::Axis::Axis(float3 pos, float length)
 	};
 	calcNormals();
 };
+
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderMoveX(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected()) {
 			models[i].moveAbs(float3(val, models[i].position.y, models[i].position.z));
 		}
 	}
-	recalcIntersections();
+	if (intersectionsRendering)
+		recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderMoveY(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
@@ -1240,7 +1261,8 @@ void _3dModelsBuilder::Sample3DSceneRenderer::sliderMoveY(float val) {
 			models[i].moveAbs(float3(models[i].position.x, val, models[i].position.z));
 		}
 	}
-	recalcIntersections();
+	if (intersectionsRendering)
+		recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderMoveZ(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
@@ -1248,35 +1270,40 @@ void _3dModelsBuilder::Sample3DSceneRenderer::sliderMoveZ(float val) {
 			models[i].moveAbs(float3(models[i].position.x, models[i].position.y, val));
 		}
 	}
-	recalcIntersections();
+	if (intersectionsRendering)
+		recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderRotateX(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected())
 			models[i].rotateAbs(float3(val, models[i].rotation.y, models[i].rotation.z));
 	}
-	recalcIntersections();
+	if (intersectionsRendering)
+		recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderRotateY(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected())
 			models[i].rotateAbs(float3(models[i].rotation.x, val, models[i].rotation.z));
 	}
-	recalcIntersections();
+	if (intersectionsRendering)
+		recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderRotateZ(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected())
 			models[i].rotateAbs(float3(models[i].rotation.x, models[i].rotation.y, val));
 	}
-	recalcIntersections();
+	if (intersectionsRendering)
+		recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderScale(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
 		if (models[i].isSelected())
 			models[i].scaleAbs(val);
 	}
-	recalcIntersections();
+	if (intersectionsRendering)
+		recalcIntersections();
 };
 void _3dModelsBuilder::Sample3DSceneRenderer::sliderRed(float val) {
 	for (size_t i = 0; i < models.size(); ++i) {
@@ -1348,7 +1375,6 @@ void _3dModelsBuilder::Sample3DSceneRenderer::recalcIntersections()
 			if (intersection.vertices.size() == 0 || intersection.indices.size() == 0)
 				continue;
 			auto buffer = models[j].getConstantBuffer();
-			XMStoreFloat4x4(&buffer.model, XMMatrixIdentity());
 			intersection.setConstantBuffer(buffer);
 			intersection.setColor(float3(1, 1, 1));
 			intersections.push_back(intersection);

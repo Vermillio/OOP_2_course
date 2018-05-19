@@ -12,14 +12,16 @@ namespace Windows {
         namespace Xaml {
             namespace Controls {
                 ref class SwapChainPanel;
-                ref class Button;
-                ref class MenuFlyoutItem;
                 ref class TextBlock;
                 ref class ListView;
+                ref class Button;
                 ref class ToggleSwitch;
                 ref class StackPanel;
                 ref class Slider;
+                ref class FontIcon;
                 ref class AppBar;
+                ref class AppBarButton;
+                ref class MenuFlyoutItem;
             }
         }
     }
@@ -42,10 +44,6 @@ namespace _3dModelsBuilder
     
     
         private: ::Windows::UI::Xaml::Controls::SwapChainPanel^ swapChainPanel;
-        private: ::Windows::UI::Xaml::Controls::Button^ OrthoProjButton;
-        private: ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ ItemX;
-        private: ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ ItemY;
-        private: ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ ItemZ;
         private: ::Windows::UI::Xaml::Controls::TextBlock^ FileName;
         private: ::Windows::UI::Xaml::Controls::ListView^ FileTree;
         private: ::Windows::UI::Xaml::Controls::Button^ AddModelButton;
@@ -78,7 +76,15 @@ namespace _3dModelsBuilder
         private: ::Windows::UI::Xaml::Controls::ToggleSwitch^ ModelTypeSwitch;
         private: ::Windows::UI::Xaml::Controls::Button^ OkButton;
         private: ::Windows::UI::Xaml::Controls::Button^ CancelButton;
+        private: ::Windows::UI::Xaml::Controls::FontIcon^ CancelButtonIcon;
+        private: ::Windows::UI::Xaml::Controls::FontIcon^ OkButtonIcon;
         private: ::Windows::UI::Xaml::Controls::AppBar^ bottomAppBar;
+        private: ::Windows::UI::Xaml::Controls::AppBarButton^ ProjButton;
+        private: ::Windows::UI::Xaml::Controls::AppBarButton^ IntersecButton;
+        private: ::Windows::UI::Xaml::Controls::FontIcon^ IntersecIcon;
+        private: ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ ItemX;
+        private: ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ ItemY;
+        private: ::Windows::UI::Xaml::Controls::MenuFlyoutItem^ ItemZ;
     };
 }
 
