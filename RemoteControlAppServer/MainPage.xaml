@@ -28,29 +28,15 @@
     </Page.Resources>-->
 
 
-    <Grid Width="1497">
-        <Grid.Resources>
-            
-        </Grid.Resources>
+    <Grid>
 
         <Frame x:Name="ContentFrame" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" HorizontalAlignment="Stretch" Margin="48,0,0,0" VerticalAlignment="Stretch"/>
 
-
         <NavigationView x:Name="MainMenu" HorizontalAlignment="Left" Margin="0,-2,0,2" VerticalAlignment="Stretch" ItemInvoked="MainMenu_ItemInvoked">
             <NavigationView.MenuItems >
-                <NavigationViewItem Content="Home" Tag="home">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE8C8;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem Content="Connection" Tag="connection">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE8C8;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
+                <NavigationViewItem Content="Home" Tag="home"/>
+                <NavigationViewItem Content="Connection" Tag="connection"/>
             </NavigationView.MenuItems>
         </NavigationView>
-
-
     </Grid>
 </Page>

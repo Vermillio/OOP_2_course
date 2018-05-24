@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteControlApplication", "RemoteControlApplication\RemoteControlApplication.csproj", "{54926737-81B1-49DA-9DA1-F5DAFA38914C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteControlAppClient", "RemoteControlApplication\RemoteControlAppClient.csproj", "{54926737-81B1-49DA-9DA1-F5DAFA38914C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteControlAppServer", "RemoteControlAppServer\RemoteControlAppServer.csproj", "{16CB1887-2D80-478D-9277-73529FC1101A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,24 @@ Global
 		{54926737-81B1-49DA-9DA1-F5DAFA38914C}.Release|x86.ActiveCfg = Release|x86
 		{54926737-81B1-49DA-9DA1-F5DAFA38914C}.Release|x86.Build.0 = Release|x86
 		{54926737-81B1-49DA-9DA1-F5DAFA38914C}.Release|x86.Deploy.0 = Release|x86
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Debug|ARM.ActiveCfg = Debug|ARM
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Debug|ARM.Build.0 = Debug|ARM
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Debug|ARM.Deploy.0 = Debug|ARM
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Debug|x64.ActiveCfg = Debug|x64
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Debug|x64.Build.0 = Debug|x64
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Debug|x64.Deploy.0 = Debug|x64
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Debug|x86.ActiveCfg = Debug|x86
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Debug|x86.Build.0 = Debug|x86
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Debug|x86.Deploy.0 = Debug|x86
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Release|ARM.ActiveCfg = Release|ARM
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Release|ARM.Build.0 = Release|ARM
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Release|ARM.Deploy.0 = Release|ARM
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Release|x64.ActiveCfg = Release|x64
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Release|x64.Build.0 = Release|x64
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Release|x64.Deploy.0 = Release|x64
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Release|x86.ActiveCfg = Release|x86
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Release|x86.Build.0 = Release|x86
+		{16CB1887-2D80-478D-9277-73529FC1101A}.Release|x86.Deploy.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
