@@ -78,8 +78,24 @@
     </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <ContentDialog Margin="0,0,0,0" Visibility="Collapsed"/>
-        <Button x:Name="MainButton" Content="START" HorizontalAlignment="Center" Click="MainButton_Click" Foreground="{ThemeResource ResourceKey=ApplicationPageBackgroundThemeBrush}" Margin="0,0,0,0" VerticalAlignment="Center" MinWidth="100" MinHeight="100" >
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" HorizontalAlignment="Stretch" Margin="0,0,0,50" VerticalAlignment="Center">
+            <StackPanel HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top">
+                <TextBlock x:Name="IPText" HorizontalAlignment="Left" Margin="0,0,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24"/>
+                <TextBlock x:Name="PortText" HorizontalAlignment="Left" Margin="0,0,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24"/>
+                <TextBlock x:Name="PassText" HorizontalAlignment="Left" Margin="0,0,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24"/>
+                <TextBlock x:Name="MainText2" HorizontalAlignment="Left" Margin="0,0,0,0" Text="Use this data and previously entered password to connect to this machine." TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24" Visibility="Collapsed"/>
+            </StackPanel>
+            <TextBlock x:Name="MainText" HorizontalAlignment="Center" Margin="0,0,0,0" Text="To begin accepting connections from other machines set the password below and press START." TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24"/>
+            <PasswordBox x:Name="PasswordBox" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top" MinWidth="150"/>
+        </StackPanel>
+        <Button Grid.Row="1" x:Name="MainButton" Content="START" HorizontalAlignment="Center" Click="MainButton_Click" Foreground="{ThemeResource ResourceKey=ApplicationPageBackgroundThemeBrush}" Margin="0,50,0,0" VerticalAlignment="Center" MinWidth="110" MinHeight="110" >
             <Button.Template>
                 <ControlTemplate TargetType="Button">
                     <Grid>
@@ -101,13 +117,7 @@
                 </ControlTemplate>
             </Button.Template>
         </Button>
-        <StackPanel HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Top">
-            <TextBlock x:Name="IPText" HorizontalAlignment="Center" Margin="0,0,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="36"/>
-            <TextBlock x:Name="PortText" HorizontalAlignment="Center" Margin="0,0,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="36"/>
-            <PasswordBox x:Name="PasswordBox" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top" MinWidth="150"/>
-            <TextBlock x:Name="MainText2" HorizontalAlignment="Center" Margin="0,0,0,0" Text="Use it to connect to this machine." TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24" Visibility="Collapsed"/>
-            <TextBlock x:Name="MainText" HorizontalAlignment="Center" Margin="0,0,0,0" Text="To begin accepting connections from other machines set the password below and press START." TextWrapping="Wrap" VerticalAlignment="Top" FontSize="24"/>
-        </StackPanel>
+
     </Grid>
 
 

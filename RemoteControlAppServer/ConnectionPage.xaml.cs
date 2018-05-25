@@ -35,15 +35,23 @@ namespace RemoteControlAppServer
             if (((Button)sender).Content.Equals("START"))
             {
                 ((Button)sender).Content = "STOP";
-                server.SetPassword(PasswordBox.Password);
                 MainText.Visibility = PasswordBox.Visibility = Visibility.Collapsed;
 
                 String ip = server.GetIPAddress().ToString();
-                IPText.Text = "Your current local ip address is\n" + ip;
+                IPText.Text = "Local ip address:\n" + ip;
 
                 int port = server.GetPort();
-                PortText.Text = "Your current port is\n" + port.ToString();
+                PortText.Text = "Port:\n" + port.ToString();
+
+                String password = PasswordBox.Password;
+//                PassText.Text = "Password:\n" + password;
+                server.SetPassword(password);
+
                 MainText2.Visibility = Visibility.Visible;
+
+                server.Start();
+                string state = server.state;
+                MainText2.Text = state;
             } else
             {
                 ((Button)sender).Content = "START";
@@ -54,6 +62,8 @@ namespace RemoteControlAppServer
                 PortText.Text = "";
 
                 MainText2.Visibility = Visibility.Collapsed;
+
+                server.Stop();
             }
         }
 

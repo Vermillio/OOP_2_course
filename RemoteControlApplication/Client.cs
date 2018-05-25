@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 
+using System.IO;
+using System.ComponentModel;
+using System.Threading;
+
+
 namespace RemoteControlAppServer
 {
     class Client
@@ -22,34 +27,49 @@ namespace RemoteControlAppServer
             tcpClient = new TcpClient();
         }
 
-        public void connect(String servername, String username, String password, Int32 port = 13000)
+        public void connect(String servername, String username, String password, Int32 port = 60060)
         {
-            tcpClient.ConnectAsync(servername, port);
-            if  (!tcpClient.Connected)
+            TcpClient client = new TcpClient();
+
+            for (int i = 0; i < 3; i++)
             {
-                State="Can't connect to server";
-                return;
+                var result = client.BeginConnect(servername, port, null, null);
+
+                // give the client 5 seconds to connect
+                result.AsyncWaitHandle.WaitOne(5000);
+
+                if (!client.Connected)
+                {
+                    try {
+                        client.EndConnect(result);
+                        State = "Can't connect to server.";
+                    }
+                    catch (SocketException e) {
+                        State = "SocketException: " + e.Message;
+                    }
+                    continue;
+                }
+
+                break;
             }
 
-            Port = port;
-            Servername = servername;
-            stream = tcpClient.GetStream();
+            if (client.Connected)
+            {
+                StreamReader clientIn = new StreamReader(client.GetStream());
+                StreamWriter clientOut = new StreamWriter(client.GetStream());
 
-            Byte[] data_un = Encoding.ASCII.GetBytes(username);
-            Byte[] data_pw = Encoding.ASCII.GetBytes(password);
-            stream.Write(data_un, 0, data_un.Length);
-            stream.Write(data_pw, 0, data_pw.Length);
+                clientOut.AutoFlush = true;
 
-            Byte[] data_responce = new Byte[256];
-
-            Int32 bytes = stream.Read(data_responce, 0, data_responce.Length);
-
-            String responce = Encoding.ASCII.GetString(data_responce);
-            State = responce;
-
+                string key="request";
+                clientOut.WriteLine(key);
+                State = "Connected";
+            }
+            else
+            {
+            }
         }
 
-        public void disconnect()
+    public void disconnect()
         {
             if (!tcpClient.Connected)
                 return;
@@ -73,3 +93,4 @@ namespace RemoteControlAppServer
         }
     }
 }
+

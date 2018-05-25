@@ -52,20 +52,21 @@ namespace RemoteControlAppServer
             PasswordBox.Width = newWidth;
             PasswordBox.Margin = newMargin;
         }
-
+        
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
+            //bool output = TestProgram.Main();
+            //StateText.Text = output.ToString();
+
             ConnectProgressRing.IsActive = true;
-            int i = 1;
-            while (i < 100000)
-                i*=5;
             String servername = ServernameBox.Text;
             String username = UsernameBox.Text;
             String password = PasswordBox.Password;
-            client.connect(servername, username, password);
+            String port = PortBox.Text;
+            client.connect(servername, username, password, Int32.Parse(port));
             String state = client.GetState();
-            if (state=="Connected")
+            if (state == "Connected")
             {
                 DisconnectButton.Visibility = Visibility.Visible;
                 //start session
@@ -82,10 +83,6 @@ namespace RemoteControlAppServer
         private void ServernameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             String text = e.ToString();
-            //if (text. )
-            //{
-            //    //show flyout
-            //}
         }
 
         private void UsernameBox_TextChanged(object sender, TextChangedEventArgs e)
