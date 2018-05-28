@@ -10,14 +10,14 @@ int main(int argc, char ** argv)
 		expr = string(argv[1]);
 	else {
 		cout << "       ---EXPRESSION SOLVER---       " << endl;
-		cout << "Available operators: +, -, *, =, (, )" << endl;
+		cout << "Available operators: '+' '-' '*' '=' '(' ')' '.' (enter ',' to exit)" << endl;
 		cout << "Enter expr >>> ";
 		cin >> expr;
 	}
-	ExpressionSolver Solver;
-	Operand answer = Solver.solve(expr);
+	ExprSolverWrapper solver;
+	string answer = solver.solve(expr);
 	answer.shrink_to_fit();
-	answer.show();
+	cout << " = " << answer << endl;
 	system("pause");
 	return 0;
 }

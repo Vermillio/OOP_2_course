@@ -1,6 +1,6 @@
 #include "ExpressionSolver.h"
 
-ExprSolve::Compp ExprSolve::ExpressionSolver::parse(string &expr)
+ExprSolve::ExprSolverWrapper::Compp ExprSolve::ExprSolverWrapper::ExpressionSolver::parse(const string &expr)
 {
 	int pivot=0;
 	int start = 0;
@@ -35,10 +35,10 @@ ExprSolve::Compp ExprSolve::ExpressionSolver::parse(string &expr)
 		}
 		else if (expr[i] == '+' || expr[i] == '-') {
 			pivot = i;
-			break;
 		}
 		else if (expr[i] == '*' || expr[i] == '/') {
-			pivot = i;
+			if (pivot!=-1 && expr[pivot]!='+' && expr[pivot]!='-')
+				pivot = i;
 		}
 		else if (!isdigit(expr[i]) && expr[i]!='.') {
 			exception("Unresolved symbol.");
@@ -46,24 +46,25 @@ ExprSolve::Compp ExprSolve::ExpressionSolver::parse(string &expr)
 		++i;
 	}
 	if (pivot == -1)
-		return Operandp(new Operand(expr.substr(start+1, end - 2)));
+		return parse(expr.substr(start+1, end - 2));
 	if (pivot == 0)
-		return Operandp(new Operand(expr.substr(start, end-start)));
+		return make_shared<Operand>(expr.substr(start, end-start));
 
 	string l = expr.substr(start, pivot-start);
 	string r = expr.substr(pivot + 1, end-pivot);
-	Compp *lEvaluated = new Compp(parse(l));
-	Compp *rEvaluated = new Compp(parse(r));
-	return Operatorp(new Operator(expr[pivot], *lEvaluated, *rEvaluated));
+	Compp lEvaluated = parse(l);
+	Compp rEvaluated = parse(r);
+	return make_shared<Operator>(expr[pivot], lEvaluated, rEvaluated);
 }
 
-ExprSolve::Operand ExprSolve::ExpressionSolver::solve(string &expr)
+ExprSolve::ExprSolverWrapper::Operand ExprSolve::ExprSolverWrapper::ExpressionSolver::solve(const string &expr, int &error)
 {
+	error = -1;
 	Compp treeExpr = parse(expr);
-	return treeExpr->evaluate();
+	return treeExpr->evaluate(error).shrink_to_fit();
 }
 
-bool ExprSolve::Operator::remove(Compp &t)
+bool ExprSolve::ExprSolverWrapper::Operator::remove(Compp &t)
 {
 	if (left == t) {
 		left = nullptr;
@@ -80,7 +81,7 @@ bool ExprSolve::Operator::remove(Compp &t)
 	return false;
 }
 
-void ExprSolve::Operator::show()
+void ExprSolve::ExprSolverWrapper::Operator::show() const
 {
 	if (left)
 		left->show();
@@ -89,47 +90,71 @@ void ExprSolve::Operator::show()
 		right->show();
 }
 
-ExprSolve::Operand ExprSolve::Operator::evaluate()
+ExprSolve::ExprSolverWrapper::Operand ExprSolve::ExprSolverWrapper::Operator::evaluate(int &error)
 {
-	switch (oper) {
-	case '+':
-		return add(left->evaluate(), right->evaluate());
-	case '-':
-		return substract(left->evaluate(), right->evaluate());
-	case '*':
-		return multiply(left->evaluate(), right->evaluate());
-	case '/':
-		return divide(left->evaluate(), right->evaluate());
-	default:
-		exception("Can't resolve expression.");
+	if (error != -1)
 		return Operand();
+	switch (oper) {
+		case '+':
+			return left->evaluate(error).add(right->evaluate(error), error);
+		case '-':
+			return left->evaluate(error).substract(right->evaluate(error), error);
+		case '*':
+			return left->evaluate(error).multiply(right->evaluate(error), error);
+		case '/':
+			return left->evaluate(error).divide(right->evaluate(error), error);
+		default: {
+			error = 1;
+			return Operand();
+		}
 	}
 }
 
-ExprSolve::Operand ExprSolve::add(Operand x, Operand y)
+ExprSolve::ExprSolverWrapper::Operand ExprSolve::ExprSolverWrapper::Operand::add(const ExprSolve::ExprSolverWrapper::Operand & x, int & error) const 
 {
-	return Operand(x.toDouble() + y.toDouble());
+	if (error != -1) {
+		return Operand();
+	}
+	return Operand(this->toDouble() + x.toDouble());
 }
 
-ExprSolve::Operand ExprSolve::substract(Operand x, Operand y)
+ExprSolve::ExprSolverWrapper::Operand ExprSolve::ExprSolverWrapper::Operand::substract(const ExprSolve::ExprSolverWrapper::Operand & x, int & error) const 
 {
-	return Operand(x.toDouble() - y.toDouble());
+	if (error != -1) {
+		return Operand();
+	}
+	return Operand(this->toDouble() - x.toDouble());
 }
 
-ExprSolve::Operand ExprSolve::multiply(Operand x, Operand y)
+ExprSolve::ExprSolverWrapper::Operand ExprSolve::ExprSolverWrapper::Operand::multiply(const ExprSolve::ExprSolverWrapper::Operand & x, int & error) const 
 {
-	return Operand(x.toDouble() * y.toDouble());
+	if (error != -1) {
+		return Operand();
+	}
+	return Operand(this->toDouble() * x.toDouble());
 }
 
-ExprSolve::Operand ExprSolve::divide(Operand x, Operand y)
+ExprSolve::ExprSolverWrapper::Operand ExprSolve::ExprSolverWrapper::Operand::divide(const ExprSolve::ExprSolverWrapper::Operand & x, int & error) const 
 {
-	return Operand(x.toDouble() / y.toDouble());
+	if (error != -1) {
+		return Operand();
+	}
+	if (abs(x.toDouble()) < 0.0000001) {
+		error = 0;
+		return Operand();
+	}
+	return Operand(this->toDouble() / x.toDouble());
 }
 
-void ExprSolve::Operand::shrink_to_fit()
+ExprSolve::ExprSolverWrapper::Operand ExprSolve::ExprSolverWrapper::Operand::shrink_to_fit() const
 {
 	int numOfZeros = 0;
-	while (value[value.length() - 1-numOfZeros] == '0')
+	while (numOfZeros < value.length() && value[value.length() - 1-numOfZeros] == '0')
 		++numOfZeros;
-	value = value.substr(0, value.length()-numOfZeros);
+	if (numOfZeros < value.length() && value[value.length() - 1 - numOfZeros] == '.')
+		++numOfZeros;
+	if (numOfZeros == value.length())
+		return Operand(0);
+	return Operand(value.substr(0, value.length()-numOfZeros));
 }
+
