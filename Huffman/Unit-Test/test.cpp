@@ -94,7 +94,6 @@ namespace compress {
 
 	TEST_F(HuffmanTest, fileCmpWorks) {
 		string filename1 = "tmp1.txt", filename2 = "tmp2.txt";
-		srand(clock());
 		string str = random_string(100);
 
 		createFile(filename1, str);
@@ -107,7 +106,7 @@ namespace compress {
 
 	TEST_F(HuffmanTest, EncodeDecodeWorks) {
 		//test on empty file
-		int threadsCount = 1;
+		int threadsCount = 8;
 		string file = "m.bin";
 
 		int errors = 0;
@@ -117,7 +116,7 @@ namespace compress {
 		system(("rmdir " + file + "_compressed /s").c_str());
 
 		for (size_t i = 0; i < testSize; ++i) {
-			string content = genRandFile(257 * 8, file);
+			string content = genRandFile(256*8, file);
 			bool success = encodeParallel(threadsCount, file);
 			if (success) {
 				decodeParallel(file + "_compressed", file + ext);

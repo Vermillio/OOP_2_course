@@ -30,6 +30,8 @@ void Huffman::buildQueue(int *frequencies, Queue*&q)
 //Transform queue into tree
 void Huffman::buildTree(Queue *head, TrNd *&tree)
 {
+	if (!head)
+		return;
 	if (tree)
 		clear(tree);
 	while (head->next)
@@ -547,16 +549,21 @@ int Huffman::splitFile(string filename, int num)
 		file.write(buff, chunkSize*sizeof(char));
 		file.close();
 	}
-		char t;
-		ofstream file(filename + "_compressed//" + to_string(chunksNum - 1) + ".bin", ios::out | ios::binary);
-		for (int i = 0; i < chunkSize % sz; ++i)
-		{
-			fin.read(&t, sizeof(char));
-			file.write(&t, sizeof(char));
-		}
-		file.close();
-		fin.close();
-		return chunksNum;
+	
+	char t;
+	ofstream file(filename + "_compressed//" + to_string(chunksNum - 1) + ".bin", ios::out | ios::binary);
+	int last_sz = sz % chunkSize;
+	if (last_sz == 0)
+		last_sz = chunkSize;
+	for (int i = 0; i < last_sz; ++i)
+	{
+		fin.read(&t, sizeof(char));
+		file.write(&t, sizeof(char));
+	}
+	delete[] buff;
+	file.close();
+	fin.close();
+	return chunksNum;
 }
 
 string Huffman::getCD()
