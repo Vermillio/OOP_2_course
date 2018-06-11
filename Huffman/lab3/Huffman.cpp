@@ -163,14 +163,11 @@ void Huffman::encodeThreadFunc(string filename)
 		filestk.pop();
 		guard.unlock();
 		string encodedfn = filename + "_compressed//" + to_string(i) + ".bin";
-		ifstream fin(encodedfn, ios::in | ios::binary);
+		ifstream fin(encodedfn, ios::in | ios::binary | ios::ate);
 		if (!fin.is_open())
 			throw runtime_error("Couldn't open " + encodedfn);
-		fin.seekg(0);
 		int filesz = fin.tellg();
-		fin.seekg(0, ios::end);
-		filesz = (int)fin.tellg() - filesz;
-		fin.seekg(0, ios::beg);
+		fin.seekg(ios::beg);
 		char *buff = new char[filesz];
 		fin.read(buff, filesz * sizeof(char));
 		fin.close();
@@ -225,6 +222,7 @@ void Huffman::encodeThreadFunc(string filename)
 
 		//WRITE ENCODED FILE
 		
+
 		fout.open(encodedfn, ios::out | ios::binary | ios::trunc);
 		if (!fout.is_open())
 			throw(exception(("CAN'T OPEN " + encodedfn).c_str()));
@@ -236,6 +234,17 @@ void Huffman::encodeThreadFunc(string filename)
 			fout.write(&c, sizeof(char));
 		}
 		fout.close();
+
+		ifstream fin1(encodedfn, ios::in | ios::binary | ios::ate);
+		int sz = fin1.tellg();
+		if (sz != HuffmanCode.size() + 1) {
+			int k = 0;
+		}
+
+
+
+		fin1.close();
+
 		delete[] buff;
 		delete[] frequencies;
 	}
@@ -243,20 +252,26 @@ void Huffman::encodeThreadFunc(string filename)
 
 void Huffman::decodeThreadFunc(string filename, string treeFilename, string * ResOfDecoding)
 {
+
+	//CHECK SIZE
+
+	ifstream fin_tmp(filename, ios::in | ios::binary | ios::ate);
+	if (!fin_tmp.is_open())
+		throw runtime_error((filename + " NOT FOUND").c_str());
+
+	int sz = fin_tmp.tellg();
+
+	fin_tmp.close();
+
 	//READ FILE
 	ifstream fin(filename, ios::in | ios::binary);
 	ifstream trfin(treeFilename, ios::in | ios::binary);
 
-	if (!fin.is_open())
-		throw runtime_error( (filename+" NOT FOUND").c_str());
 	if (!trfin.is_open())
 		throw runtime_error((treeFilename + " NOT FOUND").c_str());
+
 	trfin.close();
 
-	int sz = fin.tellg();
-	fin.seekg(0, ios::end);
-	sz = (int)fin.tellg() - sz;
-	fin.seekg(0, ios::beg);
 	vector<bitset<BYTE_SIZE>> filedata = {};
 
 	char it;
@@ -267,7 +282,7 @@ void Huffman::decodeThreadFunc(string filename, string treeFilename, string * Re
 
 //	fin.seekg(1);
 
-	while (!fin.eof())
+	for (int i=0; i < sz; ++i)
 	{
 		fin.read(&it, sizeof(char));
 		if (!fin.eof())
@@ -290,8 +305,15 @@ void Huffman::decodeThreadFunc(string filename, string treeFilename, string * Re
 	clear(tree);
 }
 
-void Huffman::encodeParallel(int threadsCount, string filename)
+bool Huffman::encodeParallel(int threadsCount, string filename)
 {
+	if (threadsCount <= 0)
+		return false;
+
+	ifstream fin(filename, ios::binary | ios::ate);
+	if ((int)fin.tellg() < threadsCount)
+		return false;
+
 	int cnum = splitFile(filename, threadsCount);
 
 	//PARSE FILENAME INTO NAME AND EXTENTION
@@ -312,19 +334,18 @@ void Huffman::encodeParallel(int threadsCount, string filename)
 		threads[i]->join();
 	}
 
-
+	return true;
 }
-
-
 
 void Huffman::decodeProc(TrNd *tree, string *Code, string *ResOfDecoding)
 {
+	*ResOfDecoding = "";
 	TrNd *t = tree;
 	for (size_t i = 0; i < Code->size(); i++)
 	{
 		if (!t->l && !t->r)
 		{
-			(*ResOfDecoding).push_back(t->symbol);
+			ResOfDecoding->push_back(t->symbol);
 			t = tree;
 		}
 		if ((*Code)[i] == '0')
@@ -391,8 +412,11 @@ void Huffman::decodeParallel(string sourceDir, string destFile)
 	}
 
 	ofstream fout(destFile, ios::out | ios::binary | ios::trunc);
-	for (int i = 0; i < threadsNum; ++i)
-		fout.write(data[i].c_str(), data[i].length()*sizeof(char));
+	for (int i = 0; i < threadsNum; ++i) {
+		int len = data[i].length();
+		fout.write(data[i].c_str(), data[i].length() * sizeof(char));
+	}
+	delete[] data;
 	fout.close();
 }
 
@@ -412,7 +436,7 @@ void Huffman::demo()
 		int size;
 		cout << "SIZE : ";
 		cin >> size;
-		GENRANDFILE(size, filename);
+		genRandFile(size, filename);
 	}
 
 	int k = filename.size() - 1;
@@ -423,7 +447,10 @@ void Huffman::demo()
 	unsigned int threadsCount;
 	cout << "THREADS COUNT : ";
 	cin >> threadsCount;
-	encodeParallel(threadsCount, filename);
+	if (!encodeParallel(threadsCount, filename)) {
+		cout << "Can't encode";
+		return;
+	}
 	decodeParallel(filename + "_compressed", filename+ext);
 	if (fileCmp(filename, filename + ext))
 		cout << "FILES ARE EQUAL." << endl;
@@ -431,22 +458,25 @@ void Huffman::demo()
 }
 
 
-void compress::Huffman::GENRANDFILE(int size, string filename)
+string compress::Huffman::genRandFile(int size, string filename)
 {
 	ofstream fout(filename, ios::out | ios::binary | ios::trunc);
-	char *buff = new char[size];
+	string buff;
 	for (int i = 0; i < size; ++i)
-		buff[i] = (char)rand();
-	fout.write(buff, size);
-	delete[] buff;
+		buff += (char)rand();
+	fout.write(buff.c_str(), size);
 	fout.close();
+	return buff;
 }
 
-bool compress::Huffman::fileCmp(string file1, string file2)
+bool compress::Huffman::fileCmp(string file1, string file2) const
 {
 	char buff1, buff2;
 	ifstream fin1(file1, ios::in | ios::binary);
 	ifstream fin2(file2, ios::in | ios::binary);
+
+	if (!fin1.is_open() || !fin2.is_open())
+		return false;
 
 	int sz1 = fin1.tellg();
 	fin1.seekg(0, ios::end);
@@ -456,8 +486,8 @@ bool compress::Huffman::fileCmp(string file1, string file2)
 	fin2.seekg(0, ios::end);
 	sz2 = (int)fin2.tellg() - sz2;
 
-//	if (sz1 != sz2)
-//		return 0;
+	if (sz1 != sz2)
+		return false;
 
 	fin1.seekg(0);
 	fin2.seekg(0);
@@ -478,26 +508,6 @@ bool compress::Huffman::fileCmp(string file1, string file2)
 	fin2.close();
 	return 1;
 }
-
-void Huffman::ErrorMessage(int n)
-{
-	switch (n)
-	{
-	case 0:
-	{
-		cout << "Couldn't open file." << endl;
-	}
-	case 1:
-	{
-
-	}
-	case 2:
-	{
-
-	}
-	}
-}
-
 
 //return chunksNum of chunkSize
 int Huffman::splitFile(string filename, int num)
@@ -539,7 +549,7 @@ int Huffman::splitFile(string filename, int num)
 	}
 		char t;
 		ofstream file(filename + "_compressed//" + to_string(chunksNum - 1) + ".bin", ios::out | ios::binary);
-		while (!fin.eof())
+		for (int i = 0; i < chunkSize % sz; ++i)
 		{
 			fin.read(&t, sizeof(char));
 			file.write(&t, sizeof(char));

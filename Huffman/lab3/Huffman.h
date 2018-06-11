@@ -1,6 +1,7 @@
 #ifndef HUFFMAN_H
 #define HUFFMAN_H
 #define BYTE_SIZE 8
+#define UNIT_TESTING
 
 #include <stack>
 #include <iostream>
@@ -24,7 +25,14 @@ namespace compress
 {
 	class Huffman
 	{
-	private:
+	public:
+
+#ifdef UNIT_TESTING
+		friend class HuffmanTest;
+#endif
+
+	protected:
+
 
 		string treeSuffix = "_tr";
 //		string encodeSuffix = "_compressed";
@@ -42,14 +50,13 @@ namespace compress
 		static void decodeProc(TrNd *tree, string *Code, string *ResOfDecoding);
 		static void decodeThreadFunc(string filename, string treeFilename, string *ResOfDecoding);
 
-		void GENRANDFILE(int size, string filename);
-		bool fileCmp(string file1, string file2);
-		void ErrorMessage(int n);
+		string genRandFile(int size, string filename);
+		bool fileCmp(string file1, string file2) const;
 		string getCD();
 	public:
 		Huffman() {};
 		~Huffman() {};
-		void encodeParallel(int threadsCount, string filename);
+		bool encodeParallel(int threadsCount, string filename);
 		void decodeParallel(string sourceDir, string destFile);
 		void demo();
 
