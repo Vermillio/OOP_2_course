@@ -1,5 +1,7 @@
 #ifndef LIST_ITERATOR_H
 #define LIST_ITERATOR_H
+
+#include "common.h"
 #include <type_traits>
 
 
@@ -23,11 +25,16 @@ namespace MyContainer {
 			}
 		void next() {
 				if (hasNext())
-					current = current->_next;
+					current = current->m_next;
 			}
 		T& get() {
 				return current->_elem;
 			}
+
+#ifdef UNIT_TESTING
+		friend class ListIteratorTest;
+#endif
+
 	};
 };
 

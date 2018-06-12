@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.h"
 #include "ListIterator.h"
 #include <locale>
 using namespace std::literals;
@@ -9,10 +10,10 @@ namespace MyContainer {
 	class NodeBase {
 	public:
 		T _elem;
-		Node * _next;
-		NodeBase(T &elem, Node * next) : _elem(elem), _next(next) {}
+		Node * m_next;
+		NodeBase(const T &elem, Node * next) : _elem(elem), m_next(next) {}
 		void setNext(Node * next) {
-			_next = next;
+			m_next = next;
 		}
 	};
 
@@ -27,22 +28,22 @@ namespace MyContainer {
 		static_assert(is_node_type<T, Node>::value, "Node must be derived from NodeBase.");
 	protected:
 		using Nodep = Node * ;
-		size_t _size;
-		Nodep _front;
+		size_t m_size;
+		Nodep m_front;
 		int null_element;
 		ListIterator<T, Node> _end = ListIterator<T, Node>(nullptr);
 	public:
 		ListIterator<T, Node> getIterator() {
-			return ListIterator<T, Node>(_front);
+			return ListIterator<T, Node>(m_front);
 		}
 		ListIterator<T, Node>& end() { return _end; };
 		size_t size() {
-			return this->_size;
+			return this->m_size;
 		}
 		T& front() {
-			if (!this->_front)
+			if (!this->m_front)
 				return this->null_element;
-			return this->_front->_elem;
+			return this->m_front->_elem;
 		};
 		bool is_null_element(T &elem) { return &elem == &this->null_element; };
 		bool testIter();
@@ -66,5 +67,4 @@ namespace MyContainer {
 			return false;
 		}
 	}
-
 }
