@@ -115,6 +115,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Caretaker.h" />
+    <ClInclude Include="common.h" />
+    <ClInclude Include="Memento.h" />
+    <ClInclude Include="Originator.h" />
+    <ClInclude Include="Picture.h" />
+    <ClInclude Include="PictureEditor.h" />
+    <ClInclude Include="Snapshot.h" />
+    <ClInclude Include="State.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
