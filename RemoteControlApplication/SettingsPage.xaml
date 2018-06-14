@@ -1,0 +1,14 @@
+﻿<Page
+    x:Class="RemoteControlAppServer.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:RemoteControlAppServer"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <TextBlock HorizontalAlignment="Center" Margin="558.258,62,557.742,0" Text="This is settings page" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="48"/>
+
+    </Grid>
+</Page>
